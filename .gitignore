@@ -1,0 +1,29 @@
+# Build output
+target/
+*.war
+*.class
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+logs/
+tmp/
+temp/
+
+# Local secrets / overrides
+.env
+.env.*
+application-local.properties
+amap-config.local.js
+
+# Machine-specific one-click runner
+run-local.bat
+!run-local.example.bat

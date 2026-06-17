@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.TicketMapper">
+
+    <resultMap id="TicketResultMap" type="com.tourism.entity.Ticket">
+        <id column="id" property="id"/>
+        <result column="scenic_id" property="scenicId"/>
+        <result column="ticket_name" property="ticketName"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="available_date" property="availableDate"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="TicketResultMap">
+        select id, scenic_id, ticket_name, price, stock, available_date
+        from ticket
+        order by id asc
+    </select>
+
+    <select id="selectByScenicId" parameterType="long" resultMap="TicketResultMap">
+        select id, scenic_id, ticket_name, price, stock, available_date
+        from ticket
+        where scenic_id = #{scenicId}
+        order by available_date asc
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="TicketResultMap">
+        select id, scenic_id, ticket_name, price, stock, available_date
+        from ticket
+        where id = #{id}
+    </select>
+
+    <update id="deductStock">
+        update ticket
+        set stock = stock - #{quantity}
+        where id = #{id}
+          and stock >= #{quantity}
+    </update>
+
+    <update id="restoreStock">
+        update ticket
+        set stock = stock + #{quantity}
+        where id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.tourism.entity.Ticket" useGeneratedKeys="true" keyProperty="id">
+        insert into ticket (scenic_id, ticket_name, price, stock, available_date)
+        values (#{scenicId}, #{ticketName}, #{price}, #{stock}, #{availableDate})
+    </insert>
+
+    <update id="updateById" parameterType="com.tourism.entity.Ticket">
+        update ticket
+        set scenic_id = #{scenicId},
+            ticket_name = #{ticketName},
+            price = #{price},
+            stock = #{stock},
+            available_date = #{availableDate}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        delete from ticket where id = #{id}
+    </delete>
+</mapper>

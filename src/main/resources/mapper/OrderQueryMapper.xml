@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.OrderQueryMapper">
+
+    <resultMap id="UserOrderVOResultMap" type="com.tourism.vo.UserOrderVO">
+        <id column="id" property="id"/>
+        <result column="order_type" property="orderType"/>
+        <result column="item_name" property="itemName"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="order_status" property="orderStatus"/>
+        <result column="use_date" property="useDate"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectHotelOrdersByUserId" parameterType="long" resultMap="UserOrderVOResultMap">
+        select
+            ho.id,
+            'HOTEL' as order_type,
+            h.hotel_name as item_name,
+            ho.total_amount,
+            ho.order_status,
+            ho.check_in_date as use_date,
+            ho.create_time
+        from hotel_order ho
+        left join hotel h on ho.hotel_id = h.id
+        where ho.user_id = #{userId}
+        order by ho.create_time desc
+    </select>
+
+    <select id="selectTicketOrdersByUserId" parameterType="long" resultMap="UserOrderVOResultMap">
+        select
+            to1.id,
+            'TICKET' as order_type,
+            t.ticket_name as item_name,
+            to1.total_amount,
+            to1.order_status,
+            to1.visit_date as use_date,
+            to1.create_time
+        from ticket_order to1
+        left join ticket t on to1.ticket_id = t.id
+        where to1.user_id = #{userId}
+        order by to1.create_time desc
+    </select>
+</mapper>

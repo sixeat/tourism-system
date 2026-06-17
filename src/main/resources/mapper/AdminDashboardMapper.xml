@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.AdminDashboardMapper">
+
+    <select id="countUsers" resultType="int">
+        select count(*) from sys_user
+    </select>
+
+    <select id="countScenicSpots" resultType="int">
+        select count(*) from scenic_spot
+    </select>
+
+    <select id="countHotels" resultType="int">
+        select count(*) from hotel
+    </select>
+
+    <select id="countTickets" resultType="int">
+        select count(*) from ticket
+    </select>
+
+    <select id="countRoutes" resultType="int">
+        select count(*) from travel_route
+    </select>
+
+    <select id="countHotelOrders" resultType="int">
+        select count(*) from hotel_order
+    </select>
+
+    <select id="countTicketOrders" resultType="int">
+        select count(*) from ticket_order
+    </select>
+
+    <select id="sumValidRevenue" resultType="java.math.BigDecimal">
+        select coalesce(sum(total_amount), 0)
+        from (
+            select total_amount from hotel_order where order_status &lt;&gt; 'CANCELLED'
+            union all
+            select total_amount from ticket_order where order_status &lt;&gt; 'CANCELLED'
+        ) t
+    </select>
+</mapper>

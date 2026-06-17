@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.ScenicSpotMapper">
+
+    <resultMap id="ScenicSpotResultMap" type="com.tourism.entity.ScenicSpot">
+        <id column="id" property="id"/>
+        <result column="scenic_name" property="scenicName"/>
+        <result column="city" property="city"/>
+        <result column="category" property="category"/>
+        <result column="description" property="description"/>
+        <result column="price" property="price"/>
+        <result column="score" property="score"/>
+        <result column="popularity" property="popularity"/>
+        <result column="tags" property="tags"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="ScenicSpotResultMap">
+        select id, scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude
+        from scenic_spot
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="ScenicSpotResultMap">
+        select id, scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude
+        from scenic_spot
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.tourism.entity.ScenicSpot" useGeneratedKeys="true" keyProperty="id">
+        insert into scenic_spot (scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude)
+        values (#{scenicName}, #{city}, #{category}, #{description}, #{price}, #{score}, #{popularity}, #{tags}, #{longitude}, #{latitude})
+    </insert>
+
+    <update id="updateById" parameterType="com.tourism.entity.ScenicSpot">
+        update scenic_spot
+        set scenic_name = #{scenicName},
+            city = #{city},
+            category = #{category},
+            description = #{description},
+            price = #{price},
+            score = #{score},
+            popularity = #{popularity},
+            tags = #{tags},
+            longitude = #{longitude},
+            latitude = #{latitude}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        delete from scenic_spot where id = #{id}
+    </delete>
+</mapper>

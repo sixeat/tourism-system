@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.OrderReviewMapper">
+
+    <resultMap id="OrderReviewResultMap" type="com.tourism.entity.OrderReview">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="order_type" property="orderType"/>
+        <result column="order_id" property="orderId"/>
+        <result column="score" property="score"/>
+        <result column="content" property="content"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectByUserId" parameterType="long" resultMap="OrderReviewResultMap">
+        select id, user_id, order_type, order_id, score, content, create_time
+        from order_review
+        where user_id = #{userId}
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectOne" resultMap="OrderReviewResultMap">
+        select id, user_id, order_type, order_id, score, content, create_time
+        from order_review
+        where user_id = #{userId}
+          and order_type = #{orderType}
+          and order_id = #{orderId}
+        limit 1
+    </select>
+
+    <insert id="insert" parameterType="com.tourism.entity.OrderReview" useGeneratedKeys="true" keyProperty="id">
+        insert into order_review (user_id, order_type, order_id, score, content)
+        values (#{userId}, #{orderType}, #{orderId}, #{score}, #{content})
+    </insert>
+</mapper>

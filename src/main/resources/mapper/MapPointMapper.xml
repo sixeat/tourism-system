@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.MapPointMapper">
+
+    <resultMap id="MapPointResultMap" type="com.tourism.entity.MapPoint">
+        <id column="id" property="id"/>
+        <result column="point_name" property="pointName"/>
+        <result column="point_type" property="pointType"/>
+        <result column="city" property="city"/>
+        <result column="address" property="address"/>
+        <result column="description" property="description"/>
+        <result column="price" property="price"/>
+        <result column="score" property="score"/>
+        <result column="tags" property="tags"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="sort_no" property="sortNo"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="MapPointResultMap">
+        select id, point_name, point_type, city, address, description, price, score, tags, longitude, latitude, sort_no, status
+        from map_point
+        where status = 1
+        order by sort_no asc, id asc
+    </select>
+
+    <select id="selectByType" resultMap="MapPointResultMap">
+        select id, point_name, point_type, city, address, description, price, score, tags, longitude, latitude, sort_no, status
+        from map_point
+        where status = 1
+          and point_type = #{pointType}
+        order by sort_no asc, id asc
+    </select>
+</mapper>

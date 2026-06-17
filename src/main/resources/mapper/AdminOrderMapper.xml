@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.AdminOrderMapper">
+
+    <resultMap id="AdminOrderVOResultMap" type="com.tourism.vo.AdminOrderVO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="order_type" property="orderType"/>
+        <result column="item_name" property="itemName"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="order_status" property="orderStatus"/>
+        <result column="use_date" property="useDate"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectHotelOrders" resultMap="AdminOrderVOResultMap">
+        select
+            ho.id,
+            ho.user_id,
+            su.username,
+            'HOTEL' as order_type,
+            h.hotel_name as item_name,
+            ho.total_amount,
+            ho.order_status,
+            ho.check_in_date as use_date,
+            ho.create_time
+        from hotel_order ho
+        left join sys_user su on ho.user_id = su.id
+        left join hotel h on ho.hotel_id = h.id
+        order by ho.create_time desc
+    </select>
+
+    <select id="selectTicketOrders" resultMap="AdminOrderVOResultMap">
+        select
+            to1.id,
+            to1.user_id,
+            su.username,
+            'TICKET' as order_type,
+            t.ticket_name as item_name,
+            to1.total_amount,
+            to1.order_status,
+            to1.visit_date as use_date,
+            to1.create_time
+        from ticket_order to1
+        left join sys_user su on to1.user_id = su.id
+        left join ticket t on to1.ticket_id = t.id
+        order by to1.create_time desc
+    </select>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.RouteSpotMapper">
+
+    <resultMap id="RouteSpotResultMap" type="com.tourism.entity.RouteSpot">
+        <id column="id" property="id"/>
+        <result column="route_id" property="routeId"/>
+        <result column="scenic_id" property="scenicId"/>
+        <result column="day_no" property="dayNo"/>
+        <result column="sort_no" property="sortNo"/>
+    </resultMap>
+
+    <select id="selectByRouteId" parameterType="long" resultMap="RouteSpotResultMap">
+        select id, route_id, scenic_id, day_no, sort_no
+        from route_spot
+        where route_id = #{routeId}
+        order by day_no asc, sort_no asc
+    </select>
+
+    <insert id="insert" parameterType="com.tourism.entity.RouteSpot" useGeneratedKeys="true" keyProperty="id">
+        insert into route_spot (route_id, scenic_id, day_no, sort_no)
+        values (#{routeId}, #{scenicId}, #{dayNo}, #{sortNo})
+    </insert>
+
+    <delete id="deleteByRouteId" parameterType="long">
+        delete from route_spot where route_id = #{routeId}
+    </delete>
+</mapper>

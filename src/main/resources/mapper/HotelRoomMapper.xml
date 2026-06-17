@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.HotelRoomMapper">
+
+    <resultMap id="HotelRoomResultMap" type="com.tourism.entity.HotelRoom">
+        <id column="id" property="id"/>
+        <result column="hotel_id" property="hotelId"/>
+        <result column="room_type" property="roomType"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="room_status" property="roomStatus"/>
+    </resultMap>
+
+    <select id="selectByHotelId" parameterType="long" resultMap="HotelRoomResultMap">
+        select id, hotel_id, room_type, price, stock, room_status
+        from hotel_room
+        where hotel_id = #{hotelId}
+        order by price asc
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="HotelRoomResultMap">
+        select id, hotel_id, room_type, price, stock, room_status
+        from hotel_room
+        where id = #{id}
+    </select>
+
+    <update id="deductStock">
+        update hotel_room
+        set stock = stock - 1
+        where id = #{id}
+          and stock > 0
+    </update>
+
+    <update id="restoreStock">
+        update hotel_room
+        set stock = stock + 1
+        where id = #{id}
+    </update>
+</mapper>

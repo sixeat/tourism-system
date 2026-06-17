@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.HotelOrderMapper">
+
+    <insert id="insert" parameterType="com.tourism.entity.HotelOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into hotel_order (
+            user_id, hotel_id, room_id, check_in_date, check_out_date, total_amount, order_status
+        ) values (
+            #{userId}, #{hotelId}, #{roomId}, #{checkInDate}, #{checkOutDate}, #{totalAmount}, #{orderStatus}
+        )
+    </insert>
+
+    <select id="selectById" parameterType="long" resultType="com.tourism.entity.HotelOrder">
+        select id, user_id, hotel_id, room_id, check_in_date, check_out_date, total_amount, order_status, create_time
+        from hotel_order
+        where id = #{id}
+    </select>
+
+    <update id="updateStatus">
+        update hotel_order
+        set order_status = #{orderStatus}
+        where id = #{id}
+    </update>
+
+    <select id="countActiveOverlap" resultType="int">
+        select count(*)
+        from hotel_order
+        where room_id = #{roomId}
+          and order_status in ('CREATED', 'PAID', 'FINISHED')
+          and check_in_date &lt; #{checkOutDate}
+          and check_out_date &gt; #{checkInDate}
+    </select>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.TravelRouteMapper">
+
+    <resultMap id="TravelRouteResultMap" type="com.tourism.entity.TravelRoute">
+        <id column="id" property="id"/>
+        <result column="route_name" property="routeName"/>
+        <result column="city" property="city"/>
+        <result column="days" property="days"/>
+        <result column="budget" property="budget"/>
+        <result column="theme" property="theme"/>
+        <result column="route_desc" property="routeDesc"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="TravelRouteResultMap">
+        select id, route_name, city, days, budget, theme, route_desc
+        from travel_route
+        order by id desc
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="TravelRouteResultMap">
+        select id, route_name, city, days, budget, theme, route_desc
+        from travel_route
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.tourism.entity.TravelRoute" useGeneratedKeys="true" keyProperty="id">
+        insert into travel_route (route_name, city, days, budget, theme, route_desc)
+        values (#{routeName}, #{city}, #{days}, #{budget}, #{theme}, #{routeDesc})
+    </insert>
+
+    <update id="updateById" parameterType="com.tourism.entity.TravelRoute">
+        update travel_route
+        set route_name = #{routeName},
+            city = #{city},
+            days = #{days},
+            budget = #{budget},
+            theme = #{theme},
+            route_desc = #{routeDesc}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        delete from travel_route where id = #{id}
+    </delete>
+</mapper>

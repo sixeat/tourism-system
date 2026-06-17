@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.tourism.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="role" property="role"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectByUsername" parameterType="string" resultMap="UserResultMap">
+        select id, username, password, phone, email, role, status, create_time
+        from sys_user
+        where username = #{username}
+        limit 1
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="UserResultMap">
+        select id, username, password, phone, email, role, status, create_time
+        from sys_user
+        where id = #{id}
+        limit 1
+    </select>
+
+    <select id="selectAll" resultMap="UserResultMap">
+        select id, username, password, phone, email, role, status, create_time
+        from sys_user
+        order by id asc
+    </select>
+
+    <insert id="insert" parameterType="com.tourism.entity.User" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_user (username, password, phone, email, role, status)
+        values (#{username}, #{password}, #{phone}, #{email}, #{role}, #{status})
+    </insert>
+
+    <update id="updateProfile" parameterType="com.tourism.entity.User">
+        update sys_user
+        set phone = #{phone},
+            email = #{email}
+        where id = #{id}
+    </update>
+
+    <update id="updatePassword" parameterType="com.tourism.entity.User">
+        update sys_user
+        set password = #{password}
+        where id = #{id}
+    </update>
+
+    <update id="updateByAdmin" parameterType="com.tourism.entity.User">
+        update sys_user
+        set phone = #{phone},
+            email = #{email},
+            role = #{role},
+            status = #{status}
+        where id = #{id}
+    </update>
+
+    <update id="updateStatus" parameterType="com.tourism.entity.User">
+        update sys_user
+        set status = #{status}
+        where id = #{id}
+    </update>
+</mapper>

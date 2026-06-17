@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tourism.mapper.HotelMapper">
+
+    <resultMap id="HotelResultMap" type="com.tourism.entity.Hotel">
+        <id column="id" property="id"/>
+        <result column="hotel_name" property="hotelName"/>
+        <result column="city" property="city"/>
+        <result column="address" property="address"/>
+        <result column="level" property="level"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="selectByCity" parameterType="string" resultMap="HotelResultMap">
+        select id, hotel_name, city, address, level, description, status
+        from hotel
+        where city = #{city}
+        order by id asc
+    </select>
+
+    <select id="selectAll" resultMap="HotelResultMap">
+        select id, hotel_name, city, address, level, description, status
+        from hotel
+        order by id asc
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="HotelResultMap">
+        select id, hotel_name, city, address, level, description, status
+        from hotel
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.tourism.entity.Hotel" useGeneratedKeys="true" keyProperty="id">
+        insert into hotel (hotel_name, city, address, level, description, status)
+        values (#{hotelName}, #{city}, #{address}, #{level}, #{description}, #{status})
+    </insert>
+
+    <update id="updateById" parameterType="com.tourism.entity.Hotel">
+        update hotel
+        set hotel_name = #{hotelName},
+            city = #{city},
+            address = #{address},
+            level = #{level},
+            description = #{description},
+            status = #{status}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        delete from hotel where id = #{id}
+    </delete>
+</mapper>
