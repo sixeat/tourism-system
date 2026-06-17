@@ -53,18 +53,26 @@
     const ctx = '<%= ctx %>';
     async function login(){
         msg.textContent = '正在登录...';
-        const response = await fetch(ctx + '/api/auth/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: username.value.trim(), password: password.value})
-        });
-        const data = await response.json();
-        if(data.code !== 200){
-            msg.textContent = data.message || '登录失败，请检查账号密码';
-            return;
+        try {
+            const response = await fetch(ctx + '/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: username.value.trim(), password: password.value})
+            });
+            if(!response.ok){
+                msg.textContent = '后端接口异常，请检查 Tomcat 和数据库连接';
+                return;
+            }
+            const data = await response.json();
+            if(data.code !== 200){
+                msg.textContent = data.message || '登录失败，请检查账号密码';
+                return;
+            }
+            const user = data.data || {};
+            location.href = user.role === 'ADMIN' ? ctx + '/admin.jsp' : ctx + '/home.jsp';
+        } catch (error) {
+            msg.textContent = '登录请求失败，请确认后端已启动';
         }
-        const user = data.data || {};
-        location.href = user.role === 'ADMIN' ? ctx + '/admin.jsp' : ctx + '/home.jsp';
     }
     function goRegister(){
         location.href = ctx + '/login.jsp';

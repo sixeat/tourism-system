@@ -14,7 +14,7 @@ set "APP_NAME=tourism-system"
 set "APP_URL=http://localhost:8080/%APP_NAME%/"
 
 rem Local MySQL config.
-set "DB_URL=jdbc:mysql://localhost:3306/tourism_system?useUnicode=true^&characterEncoding=UTF-8^&serverTimezone=Asia/Shanghai"
+set "DB_URL=jdbc:mysql://localhost:3306/tourism_system?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"
 set "DB_USERNAME=root"
 set "DB_PASSWORD=YOUR_MYSQL_PASSWORD"
 
