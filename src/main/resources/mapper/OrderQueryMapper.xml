@@ -11,6 +11,10 @@
         <result column="total_amount" property="totalAmount"/>
         <result column="order_status" property="orderStatus"/>
         <result column="use_date" property="useDate"/>
+        <result column="check_in_date" property="checkInDate"/>
+        <result column="check_out_date" property="checkOutDate"/>
+        <result column="visit_date" property="visitDate"/>
+        <result column="quantity" property="quantity"/>
         <result column="create_time" property="createTime"/>
     </resultMap>
 
@@ -22,6 +26,10 @@
             ho.total_amount,
             ho.order_status,
             ho.check_in_date as use_date,
+            ho.check_in_date,
+            ho.check_out_date,
+            null as visit_date,
+            null as quantity,
             ho.create_time
         from hotel_order ho
         left join hotel h on ho.hotel_id = h.id
@@ -37,6 +45,10 @@
             to1.total_amount,
             to1.order_status,
             to1.visit_date as use_date,
+            null as check_in_date,
+            null as check_out_date,
+            to1.visit_date,
+            to1.quantity,
             to1.create_time
         from ticket_order to1
         left join ticket t on to1.ticket_id = t.id

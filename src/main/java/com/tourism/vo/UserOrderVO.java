@@ -11,6 +11,10 @@ public class UserOrderVO {
     private BigDecimal totalAmount;
     private String orderStatus;
     private LocalDate useDate;
+    private LocalDate checkInDate;
+    private LocalDate checkOutDate;
+    private LocalDate visitDate;
+    private Integer quantity;
     private LocalDateTime createTime;
 
     public Long getId() {
@@ -59,6 +63,38 @@ public class UserOrderVO {
 
     public void setUseDate(LocalDate useDate) {
         this.useDate = useDate;
+    }
+
+    public LocalDate getCheckInDate() {
+        return checkInDate;
+    }
+
+    public void setCheckInDate(LocalDate checkInDate) {
+        this.checkInDate = checkInDate;
+    }
+
+    public LocalDate getCheckOutDate() {
+        return checkOutDate;
+    }
+
+    public void setCheckOutDate(LocalDate checkOutDate) {
+        this.checkOutDate = checkOutDate;
+    }
+
+    public LocalDate getVisitDate() {
+        return visitDate;
+    }
+
+    public void setVisitDate(LocalDate visitDate) {
+        this.visitDate = visitDate;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public LocalDateTime getCreateTime() {
