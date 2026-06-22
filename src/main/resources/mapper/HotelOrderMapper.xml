@@ -2,8 +2,23 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    HotelOrderMapper.xml - 酒店订单 SQL 映射文件
+    namespace: com.tourism.mapper.HotelOrderMapper
+    作用：提供酒店订单的创建、查询、状态更新以及日期冲突检测的 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.HotelOrderMapper">
 
+    <!--
+        插入一条新的酒店订单
+        表：hotel_order
+        插入列：user_id, hotel_id, room_id, check_in_date, check_out_date, total_amount, order_status
+        值来源：#{userId}, #{hotelId}, #{roomId}, #{checkInDate}, #{checkOutDate}, #{totalAmount}, #{orderStatus}
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键值赋值给传入 HotelOrder 对象的 id 属性。
+        parameterType：com.tourism.entity.HotelOrder
+        #{property}：预编译参数绑定，防止 SQL 注入，同时自动处理类型转换。
+    -->
     <insert id="insert" parameterType="com.tourism.entity.HotelOrder" useGeneratedKeys="true" keyProperty="id">
         insert into hotel_order (
             user_id, hotel_id, room_id, check_in_date, check_out_date, total_amount, order_status
@@ -12,18 +27,48 @@
         )
     </insert>
 
+    <!--
+        根据订单 ID 查询酒店订单详情
+        表：hotel_order
+        查询列：id, user_id, hotel_id, room_id, check_in_date, check_out_date, total_amount, order_status, create_time
+        WHERE 条件：id = #{id}
+        resultType：com.tourism.entity.HotelOrder（直接使用默认字段映射，要求列名与属性名一致或开启驼峰映射）
+        parameterType：long
+        #{id}：预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectById" parameterType="long" resultType="com.tourism.entity.HotelOrder">
         select id, user_id, hotel_id, room_id, check_in_date, check_out_date, total_amount, order_status, create_time
         from hotel_order
         where id = #{id}
     </select>
 
+    <!--
+        更新酒店订单状态
+        表：hotel_order
+        SET 子句：order_status = #{orderStatus}
+        WHERE 条件：id = #{id}
+        #{id} 和 #{orderStatus}：通过 @Param 注解从接口方法映射而来，预编译绑定防止 SQL 注入。
+        典型场景：支付成功后更新为 PAID，用户取消后更新为 CANCELLED。
+    -->
     <update id="updateStatus">
         update hotel_order
         set order_status = #{orderStatus}
         where id = #{id}
     </update>
 
+    <!--
+        统计指定房间在指定日期范围内的活跃订单冲突数量
+        表：hotel_order
+        逻辑：检测同一房间在时间区间上是否存在重叠的有效订单。
+        WHERE 条件：
+            1. room_id = #{roomId}：限定具体房间
+            2. order_status in ('CREATED', 'PAID', 'FINISHED')：仅统计有效订单，排除已取消订单
+            3. check_in_date < #{checkOutDate}：新订单的退房日期必须晚于已有订单的入住日期
+            4. check_out_date > #{checkInDate}：新订单的入住日期必须早于已有订单的退房日期
+        区间重叠数学原理：[a, b) 与 [c, d) 重叠的条件为 a < d 且 c < b。
+        参数通过 #{param} 预编译绑定，防止 SQL 注入。
+        注意：<> 在 XML 中需转义为 &lt; 和 &gt;。
+    -->
     <select id="countActiveOverlap" resultType="int">
         select count(*)
         from hotel_order

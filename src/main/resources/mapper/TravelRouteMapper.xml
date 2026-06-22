@@ -2,8 +2,19 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    TravelRouteMapper.xml - 旅游路线 SQL 映射文件
+    namespace: com.tourism.mapper.TravelRouteMapper
+    作用：提供旅游路线的完整 CRUD SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.TravelRouteMapper">
 
+    <!--
+        resultMap: TravelRouteResultMap
+        类型：com.tourism.entity.TravelRoute
+        设计说明：下划线列名（route_name, route_desc）映射到驼峰属性（routeName, routeDesc）。
+        <id> 标识主键 id。
+    -->
     <resultMap id="TravelRouteResultMap" type="com.tourism.entity.TravelRoute">
         <id column="id" property="id"/>
         <result column="route_name" property="routeName"/>
@@ -14,23 +25,51 @@
         <result column="route_desc" property="routeDesc"/>
     </resultMap>
 
+    <!--
+        查询所有旅游路线
+        表：travel_route
+        查询列：id, route_name, city, days, budget, theme, route_desc
+        ORDER BY：id desc，按主键降序，最新添加的路线展示在最前面。
+    -->
     <select id="selectAll" resultMap="TravelRouteResultMap">
         select id, route_name, city, days, budget, theme, route_desc
         from travel_route
         order by id desc
     </select>
 
+    <!--
+        根据路线 ID 查询单个旅游路线详情
+        表：travel_route
+        查询列：同上
+        WHERE 条件：id = #{id}
+        parameterType：long
+    -->
     <select id="selectById" parameterType="long" resultMap="TravelRouteResultMap">
         select id, route_name, city, days, budget, theme, route_desc
         from travel_route
         where id = #{id}
     </select>
 
+    <!--
+        插入一条新的旅游路线
+        表：travel_route
+        插入列：route_name, city, days, budget, theme, route_desc
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.TravelRoute
+    -->
     <insert id="insert" parameterType="com.tourism.entity.TravelRoute" useGeneratedKeys="true" keyProperty="id">
         insert into travel_route (route_name, city, days, budget, theme, route_desc)
         values (#{routeName}, #{city}, #{days}, #{budget}, #{theme}, #{routeDesc})
     </insert>
 
+    <!--
+        根据路线 ID 更新旅游路线信息
+        表：travel_route
+        SET 子句：全字段更新
+        WHERE 条件：id = #{id}
+        parameterType：com.tourism.entity.TravelRoute
+    -->
     <update id="updateById" parameterType="com.tourism.entity.TravelRoute">
         update travel_route
         set route_name = #{routeName},
@@ -42,6 +81,12 @@
         where id = #{id}
     </update>
 
+    <!--
+        根据路线 ID 删除旅游路线
+        表：travel_route
+        WHERE 条件：id = #{id}
+        parameterType：long
+    -->
     <delete id="deleteById" parameterType="long">
         delete from travel_route where id = #{id}
     </delete>

@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- ========================================================== -->
+<!--  Spring MVC 配置文件（spring-mvc.xml）                         -->
+<!--  文件路径：classpath:spring/spring-mvc.xml                     -->
+<!--  作用：定义 Spring MVC Web 层的所有组件，包括 Controller 扫描、
+       注解驱动、静态资源处理、拦截器链、视图解析器等。
+       该上下文由 web.xml 中 DispatcherServlet 的 init-param 加载，
+       作为 DispatcherServlet 的专属子容器，可访问父容器（Root Context）中的 Service 和 DAO Bean。  -->
+<!-- ========================================================== -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:mvc="http://www.springframework.org/schema/mvc"
@@ -8,24 +16,93 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  Controller 组件扫描                                       -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- context:component-scan：扫描 com.tourism.controller 包，
+         自动注册所有带有 @Controller 或 @RestController 注解的类。
+         这些 Controller 负责接收 HTTP 请求，调用 Service 层处理业务，
+         最终返回视图名称或 JSON 数据给客户端。
+         将 Controller 扫描单独放在此文件（而非 spring-context.xml），
+         是 Spring MVC 父子容器设计的标准做法：避免 Service 层 Bean 被重复加载，
+         同时确保 Web 层 Bean 由 DispatcherServlet 的上下文管理。 -->
     <context:component-scan base-package="com.tourism.controller"/>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  注解驱动（Annotation-Driven MVC）                         -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- mvc:annotation-driven：启用 Spring MVC 的高级注解功能，一键注册多个核心组件：
+         - RequestMappingHandlerMapping：处理 @RequestMapping 注解，建立 URL 到 Handler 的映射；
+         - RequestMappingHandlerAdapter：调用 Handler 方法，解析参数、绑定数据、处理返回值；
+         - HttpMessageConverter（包括 MappingJackson2HttpMessageConverter）：
+           自动处理 @RequestBody 和 @ResponseBody，完成 Java 对象与 JSON 的转换；
+         - 数据校验、格式化、类型转换等基础设施。
+         这是现代 Spring MVC 应用的核心配置，替代了传统的 XML 视图解析方式。 -->
     <mvc:annotation-driven/>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  默认 Servlet 静态资源处理                                   -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- mvc:default-servlet-handler：将静态资源请求（如 .js、.css、.png、.html）
+         转发给 Servlet 容器（如 Tomcat）的默认 Servlet 处理，
+         而不是由 DispatcherServlet 尝试匹配 @RequestMapping。
+         这是实现"前后端分离"或"单页应用"混合部署时的标准做法：
+         - 动态请求（如 /api/user/list）由 Spring Controller 处理；
+         - 静态资源（如 /static/style.css）由 Tomcat 直接高效返回。
+         如果不配置此标签，静态资源请求会因找不到匹配的 Handler 而返回 404。 -->
     <mvc:default-servlet-handler/>
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  拦截器链（Interceptors）——请求预处理与权限控制              -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- mvc:interceptors：定义请求拦截器链，按声明顺序依次执行。
+         拦截器在 Handler 执行前（preHandle）、执行后（postHandle）、视图渲染后（afterCompletion）
+         三个钩子点插入自定义逻辑，常用于登录校验、权限鉴权、日志记录、跨域处理等。 -->
     <mvc:interceptors>
+
+        <!-- 第一个拦截器：用户认证拦截器（AuthInterceptor） -->
         <mvc:interceptor>
+            <!-- mvc:mapping：指定该拦截器生效的 URL 路径模式，
+                 /api/order/** 表示所有以 /api/order/ 开头的请求（如 /api/order/create、/api/order/123）
+                 /api/user/** 表示所有以 /api/user/ 开头的请求（如 /api/user/profile、/api/user/favorites）
+                 这些路径涉及用户个人信息和订单操作，必须登录后才能访问。 -->
             <mvc:mapping path="/api/order/**"/>
             <mvc:mapping path="/api/user/**"/>
+            <!-- 拦截器类：com.tourism.config.AuthInterceptor，
+                 通常实现 HandlerInterceptor 接口，在 preHandle 中检查 Session/Token 是否存在，
+                 未登录则返回 401 或重定向到登录页，阻止后续 Handler 执行。 -->
             <bean class="com.tourism.config.AuthInterceptor"/>
         </mvc:interceptor>
+
+        <!-- 第二个拦截器：管理员权限拦截器（AdminInterceptor） -->
         <mvc:interceptor>
+            <!-- mvc:mapping：仅拦截 /api/admin/** 路径，
+                 如 /api/admin/dashboard、/api/admin/statistics 等管理后台接口。
+                 在拦截器内部除了检查登录状态外，还需校验当前用户角色是否为 ADMIN，
+                 非管理员用户访问则返回 403 Forbidden。 -->
             <mvc:mapping path="/api/admin/**"/>
+            <!-- 拦截器类：com.tourism.config.AdminInterceptor，
+                 继承或实现 HandlerInterceptor，在 preHandle 中读取用户角色信息，
+                 实现比普通用户更严格的安全控制。 -->
             <bean class="com.tourism.config.AdminInterceptor"/>
         </mvc:interceptor>
     </mvc:interceptors>
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  视图解析器（View Resolver）——JSP 渲染                       -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- 配置 InternalResourceViewResolver：Spring MVC 默认的 JSP 视图解析器，
+         当 Controller 返回字符串视图名（如 "index"）时，
+         解析器将其拼接为完整物理路径：prefix + viewName + suffix，
+         最终定位到 /WEB-INF/views/index.jsp。
+         将 JSP 放在 /WEB-INF/views/ 下有两个好处：
+         1. 用户无法直接通过浏览器 URL 访问 JSP 文件（WEB-INF 目录受保护），
+            必须通过 Controller 转发，确保请求经过业务层处理；
+         2. 统一管理视图文件，便于维护和版本控制。 -->
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!-- prefix：视图文件的前缀路径，定位到 Web 应用的 WEB-INF/views 目录下 -->
         <property name="prefix" value="/WEB-INF/views/"/>
+        <!-- suffix：视图文件的后缀，与 JSP 技术栈对应，也可改为 .html（使用其他解析器） -->
         <property name="suffix" value=".jsp"/>
     </bean>
 </beans>

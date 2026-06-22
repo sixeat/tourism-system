@@ -1,34 +1,67 @@
+/* ============================================================
+   后台管理页面全局样式表（admin.css）
+   
+   本文件为 admin.jsp 提供专属样式，定义了后台管理系统的：
+   - CSS 变量（色彩体系、阴影、边框）
+   - 整体布局：左侧侧边栏 + 右侧主内容区的网格布局
+   - 侧边栏导航、品牌标识、按钮、表单卡片
+   - 数据展示卡片、分页组件、路线编排器
+   - 响应式断点：在 1380px 以下自动调整列数
+   ============================================================ */
+
+/* ---------------- CSS 变量定义 ---------------- */
 :root {
+    /* 品牌主色：蓝色系，用于按钮、链接、高亮 */
     --blue: #1677ff;
+    /* 蓝色悬停/深色调 */
     --blue-dark: #0958d9;
+    /* 青色系辅助色，用于图标渐变 */
     --cyan: #13c2c2;
+    /* 成功状态绿色 */
     --green: #10b981;
+    /* 危险/删除操作红色 */
     --red: #ef4444;
+    /* 警告/提示橙色 */
     --orange: #f97316;
+    /* 主文字色：深蓝灰 */
     --ink: #172033;
+    /* 辅助文字灰 */
     --muted: #6b7280;
+    /* 边框和分割线浅灰蓝 */
     --line: #e5edf6;
+    /* 页面背景浅灰蓝 */
     --soft: #f5f8fc;
+    /* 卡片纯白底色 */
     --card: #ffffff;
+    /* 统一卡片阴影：柔和蓝色调 */
     --shadow: 0 18px 45px rgba(30, 64, 175, 0.10);
 }
 
+/* ---------------- 基础重置与页面级样式 ---------------- */
 * {
+    /* 统一盒模型，避免 padding 撑开容器 */
     box-sizing: border-box;
 }
 
 html {
+    /* 开启平滑滚动，锚点跳转更自然 */
     scroll-behavior: smooth;
 }
 
 body {
+    /* 移除默认外边距 */
     margin: 0;
+    /* 最小宽度，防止后台在窄屏下布局严重错乱 */
     min-width: 1180px;
+    /* 字体栈：优先使用微软雅黑，兼容 macOS PingFang SC 和 Windows Segoe UI */
     font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    /* 文字颜色使用变量 */
     color: var(--ink);
+    /* 页面背景：从上到下的浅蓝灰渐变，避免纯白刺眼 */
     background: linear-gradient(180deg, #f7fbff 0%, #eef4fb 100%);
 }
 
+/* 表单元素统一继承字体 */
 button,
 input,
 select,
@@ -40,17 +73,21 @@ button {
     cursor: pointer;
 }
 
+/* ---------------- 后台布局框架 ---------------- */
+/* 最外层壳：左侧固定宽侧边栏 + 右侧自适应主内容 */
 .admin-shell {
     display: grid;
     grid-template-columns: 224px 1fr;
     min-height: 100vh;
 }
 
+/* 左侧侧边栏：吸顶、全高、可滚动 */
 .admin-sidebar {
     position: sticky;
     top: 0;
     height: 100vh;
     padding: 18px 16px;
+    /* 毛玻璃效果：半透明白底 */
     background: rgba(255, 255, 255, 0.94);
     border-right: 1px solid var(--line);
     display: flex;
@@ -59,6 +96,7 @@ button {
     overflow-y: auto;
 }
 
+/* 品牌区：Logo + 名称 + 副标题 */
 .sidebar-brand {
     display: flex;
     align-items: center;
@@ -67,6 +105,7 @@ button {
     border-bottom: 1px solid var(--line);
 }
 
+/* Logo 圆形块：蓝青渐变 */
 .brand-logo {
     width: 42px;
     height: 42px;
@@ -91,12 +130,14 @@ button {
     font-size: 12px;
 }
 
+/* 导航菜单区：纵向排列 */
 .sidebar-nav {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
+/* 导航按钮与底部按钮的统一样式 */
 .nav-link,
 .sidebar-footer button {
     width: 100%;
@@ -113,6 +154,7 @@ button {
     text-align: left;
 }
 
+/* 导航按钮左侧图标（带首字） */
 .nav-link span {
     width: 24px;
     height: 24px;
@@ -124,12 +166,14 @@ button {
     font-size: 13px;
 }
 
+/* 导航按钮悬停效果 */
 .nav-link:hover,
 .sidebar-footer button:hover {
     background: #f1f7ff;
     color: var(--blue);
 }
 
+/* 当前激活的导航项：蓝底白字 */
 .nav-link.active {
     background: var(--blue);
     color: #fff;
@@ -141,6 +185,7 @@ button {
     color: #fff;
 }
 
+/* 侧边栏底部：用户首页、入口页、退出登录 */
 .sidebar-footer {
     margin-top: auto;
     padding-top: 14px;
@@ -154,10 +199,12 @@ button {
     color: var(--red);
 }
 
+/* ---------------- 主内容区 ---------------- */
 .admin-main {
     padding: 20px 28px 44px;
 }
 
+/* 顶部工具栏：吸顶、毛玻璃、搜索框 */
 .admin-topbar {
     position: sticky;
     top: 0;
@@ -173,6 +220,7 @@ button {
     align-items: center;
 }
 
+/* 小标题/眉批文字（如 Dashboard / Orders） */
 .eyebrow {
     margin: 0 0 6px;
     color: var(--blue);
@@ -191,12 +239,14 @@ h2 {
     font-size: 26px;
 }
 
+/* 顶部右侧操作区：搜索 + 刷新按钮 */
 .topbar-actions {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
+/* 后台搜索框：白色圆角输入框 + 搜索按钮 */
 .admin-search {
     width: 430px;
     display: grid;
@@ -216,6 +266,7 @@ h2 {
     background: transparent;
 }
 
+/* 按钮统一样式：主按钮、次按钮、幽灵按钮、危险按钮 */
 .admin-search button,
 .primary-btn,
 .secondary-btn,
@@ -253,6 +304,7 @@ h2 {
     background: var(--red);
 }
 
+/* ----------------  Hero 卡片（欢迎/概览区） ---------------- */
 .hero-card,
 .admin-section {
     background: rgba(255, 255, 255, 0.96);
@@ -272,6 +324,7 @@ h2 {
     position: relative;
 }
 
+/* Hero 卡片右上角装饰性蓝色光晕 */
 .hero-card::after {
     content: "";
     position: absolute;
@@ -303,6 +356,7 @@ h2 {
     color: var(--muted);
 }
 
+/* 业务流程步骤展示：推荐算法 → 路线规划 → 预订订单 */
 .hero-steps {
     min-width: 420px;
     display: flex;
@@ -325,11 +379,13 @@ h2 {
     background: #b9d7ff;
 }
 
+/* ---------------- 管理区块（每个 section） ---------------- */
 .admin-section {
     margin-bottom: 18px;
     padding: 22px;
 }
 
+/* 区块头部：标题 + 操作按钮/筛选器 */
 .section-head {
     display: flex;
     justify-content: space-between;
@@ -342,12 +398,14 @@ h2 {
     font-size: 22px;
 }
 
+/* 数据概览指标网格：5 列等宽 */
 .metric-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(150px, 1fr));
     gap: 12px;
 }
 
+/* 单个指标卡片：用户总数、景点数、订单数等 */
 .metric-card {
     padding: 16px;
     border-radius: 20px;
@@ -367,6 +425,7 @@ h2 {
     font-size: 13px;
 }
 
+/* 筛选下拉框与表单输入框统一样式 */
 .filter-row select,
 .form-card input,
 .form-card select,
@@ -387,6 +446,7 @@ h2 {
     box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.10);
 }
 
+/* 表单卡片：双列网格布局，用于景点/酒店/门票/路线录入 */
 .form-card {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -398,6 +458,7 @@ h2 {
     border: 1px solid #e2edf8;
 }
 
+/* 多行文本框和跨列元素占满整行 */
 .form-card textarea,
 .form-actions,
 .result,
@@ -410,6 +471,7 @@ h2 {
     resize: vertical;
 }
 
+/* 表单操作按钮区：保存/新增/修改等 */
 .form-actions {
     display: flex;
     align-items: center;
@@ -417,6 +479,7 @@ h2 {
     flex-wrap: wrap;
 }
 
+/* 操作结果提示文字 */
 .result {
     min-height: 20px;
     color: var(--green);
@@ -428,6 +491,7 @@ h2 {
     color: var(--red);
 }
 
+/* ---------------- 用户管理两列布局 ---------------- */
 .manage-layout {
     display: grid;
     grid-template-columns: 410px 1fr;
@@ -435,6 +499,7 @@ h2 {
     align-items: start;
 }
 
+/* ---------------- 景点/酒店/门票三列资源网格 ---------------- */
 .resource-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -446,6 +511,7 @@ h2 {
     margin-bottom: 0;
 }
 
+/* ---------------- 路线管理两列布局 ---------------- */
 .route-layout {
     display: grid;
     grid-template-columns: 540px 1fr;
@@ -457,17 +523,20 @@ h2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* ---------------- 数据列表网格 ---------------- */
 .list-grid {
     display: grid;
     gap: 10px;
 }
 
+/* 紧凑列表：最大高度 + 滚动条 */
 .list-grid.compact {
     max-height: 560px;
     overflow: auto;
     padding-right: 4px;
 }
 
+/* 数据卡片（订单/用户/景点/酒店等列表项） */
 .data-card {
     padding: 14px;
     border-radius: 18px;
@@ -481,6 +550,7 @@ h2 {
     box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
+/* 卡片标题区：名称 + 状态标签 */
 .card-title {
     display: flex;
     justify-content: space-between;
@@ -492,12 +562,14 @@ h2 {
     font-size: 16px;
 }
 
+/* 辅助文字：时间、地点、价格等 */
 .muted {
     color: var(--muted);
     font-size: 13px;
     line-height: 1.65;
 }
 
+/* 状态标签徽章：通用蓝、成功绿、危险红、警告橙 */
 .badge {
     flex: 0 0 auto;
     display: inline-flex;
@@ -526,6 +598,7 @@ h2 {
     color: #ea580c;
 }
 
+/* 卡片操作按钮区：编辑、删除、启用/禁用等 */
 .card-actions {
     display: flex;
     gap: 8px;
@@ -561,6 +634,7 @@ h2 {
     background: #ecfdf5;
 }
 
+/* ---------------- 路线点位编排器 ---------------- */
 .route-builder {
     padding: 14px;
     border-radius: 18px;
@@ -580,6 +654,7 @@ h2 {
     font-size: 13px;
 }
 
+/* 编排器内表单：景点选择 + 第几天 + 第几站 + 添加按钮 */
 .builder-grid {
     display: grid;
     grid-template-columns: 1fr 90px 90px auto;
@@ -587,12 +662,14 @@ h2 {
     margin-bottom: 10px;
 }
 
+/* 已添加点位预览列表 */
 .spot-preview {
     display: grid;
     gap: 8px;
     margin-top: 10px;
 }
 
+/* 单个点位项：显示景点名、第几天第几站、移除按钮 */
 .spot-item {
     display: flex;
     justify-content: space-between;
@@ -604,6 +681,7 @@ h2 {
     border: 1px solid #e4edf7;
 }
 
+/* 空状态提示 */
 .empty-state {
     padding: 18px;
     border-radius: 18px;
@@ -613,22 +691,28 @@ h2 {
     text-align: center;
 }
 
+/* ---------------- 响应式断点：1380px 以下 ---------------- */
 @media (max-width: 1380px) {
+    /* 指标从 5 列变为 3 列 */
     .metric-grid {
         grid-template-columns: repeat(3, minmax(150px, 1fr));
     }
-
+    /* 资源从 3 列变为单列 */
     .resource-grid {
         grid-template-columns: 1fr;
     }
-
+    /* 路线管理和用户管理从左右布局变为上下堆叠 */
     .route-layout,
     .manage-layout {
         grid-template-columns: 1fr;
     }
 }
 
+/* ============================================================
+   页面切换与分页组件
+   ============================================================ */
 
+/* 默认隐藏所有管理区块，通过 JS 切换 active-page 显示 */
 .admin-section {
     display: none;
 }
@@ -637,6 +721,7 @@ h2 {
     display: block;
 }
 
+/* 资源网格在响应式下的特殊处理 */
 .resource-grid {
     display: block;
 }
@@ -645,12 +730,14 @@ h2 {
     margin-bottom: 18px;
 }
 
+/* 紧凑列表在响应式下取消高度限制 */
 .list-grid.compact {
     max-height: none;
     overflow: visible;
     padding-right: 0;
 }
 
+/* 分页工具栏 */
 .pager-bar {
     display: flex;
     justify-content: space-between;

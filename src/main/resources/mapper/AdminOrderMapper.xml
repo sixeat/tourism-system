@@ -2,8 +2,22 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    AdminOrderMapper.xml - 后台管理订单查询 SQL 映射文件
+    namespace: com.tourism.mapper.AdminOrderMapper
+    作用：将酒店订单和门票订单统一封装为 AdminOrderVO，供管理员后台查看。
+-->
 <mapper namespace="com.tourism.mapper.AdminOrderMapper">
 
+    <!--
+        resultMap: AdminOrderVOResultMap
+        类型：com.tourism.vo.AdminOrderVO
+        设计说明：数据库表字段采用下划线命名（如 user_id, order_status），
+        Java 实体属性采用驼峰命名（如 userId, orderStatus）。
+        通过 <result> 标签显式建立 column -> property 映射关系，
+        解决下划线命名与驼峰命名之间的自动映射问题。
+        <id> 标签标识主键列，便于 MyBatis 进行缓存和结果集去重优化。
+    -->
     <resultMap id="AdminOrderVOResultMap" type="com.tourism.vo.AdminOrderVO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
@@ -16,6 +30,22 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!--
+        查询所有酒店订单（管理员视图）
+        表：hotel_order（别名 ho）、sys_user（别名 su）、hotel（别名 h）
+        JOIN 逻辑：
+            - LEFT JOIN sys_user su on ho.user_id = su.id：关联用户表获取用户名
+            - LEFT JOIN hotel h on ho.hotel_id = h.id：关联酒店表获取酒店名称
+        字段说明：
+            - ho.id, ho.user_id, ho.total_amount, ho.order_status, ho.create_time 来自订单表
+            - su.username 来自用户表
+            - h.hotel_name as item_name 将酒店名称映射为通用商品名称
+            - 'HOTEL' as order_type 固定标识订单类型为酒店订单
+            - ho.check_in_date as use_date 将入住日期映射为通用使用日期
+        ORDER BY：ho.create_time desc，按创建时间降序，确保最新订单在前。
+        参数：无，查询全量酒店订单。
+        #{param}：本语句无预编译参数，SQL 静态执行。
+    -->
     <select id="selectHotelOrders" resultMap="AdminOrderVOResultMap">
         select
             ho.id,
@@ -33,6 +63,22 @@
         order by ho.create_time desc
     </select>
 
+    <!--
+        查询所有门票订单（管理员视图）
+        表：ticket_order（别名 to1）、sys_user（别名 su）、ticket（别名 t）
+        JOIN 逻辑：
+            - LEFT JOIN sys_user su on to1.user_id = su.id：关联用户表获取用户名
+            - LEFT JOIN ticket t on to1.ticket_id = t.id：关联门票表获取门票名称
+        字段说明：
+            - to1.id, to1.user_id, to1.total_amount, to1.order_status, to1.create_time 来自订单表
+            - su.username 来自用户表
+            - t.ticket_name as item_name 将门票名称映射为通用商品名称
+            - 'TICKET' as order_type 固定标识订单类型为门票订单
+            - to1.visit_date as use_date 将游玩日期映射为通用使用日期
+        ORDER BY：to1.create_time desc，按创建时间降序，确保最新订单在前。
+        注意：to1 作为别名，因为 "to" 是 SQL 保留关键字，直接使用会产生语法错误。
+        #{param}：本语句无预编译参数，SQL 静态执行。
+    -->
     <select id="selectTicketOrders" resultMap="AdminOrderVOResultMap">
         select
             to1.id,

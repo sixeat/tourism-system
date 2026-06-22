@@ -2,8 +2,19 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    UserFavoriteMapper.xml - 用户收藏 SQL 映射文件
+    namespace: com.tourism.mapper.UserFavoriteMapper
+    作用：提供用户收藏记录的查询、新增和删除 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.UserFavoriteMapper">
 
+    <!--
+        resultMap: UserFavoriteResultMap
+        类型：com.tourism.entity.UserFavorite
+        设计说明：下划线列名（user_id, favorite_type, target_id, create_time）映射到驼峰属性。
+        <id> 标识主键 id。
+    -->
     <resultMap id="UserFavoriteResultMap" type="com.tourism.entity.UserFavorite">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
@@ -14,6 +25,13 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!--
+        根据用户 ID 查询该用户的所有收藏记录
+        表：user_favorite
+        查询列：id, user_id, favorite_type, target_id, title, description, create_time
+        WHERE 条件：user_id = #{userId}，预编译绑定防止 SQL 注入。
+        ORDER BY：create_time desc, id desc，按收藏时间降序，时间相同则按 id 降序。
+    -->
     <select id="selectByUserId" parameterType="long" resultMap="UserFavoriteResultMap">
         select id, user_id, favorite_type, target_id, title, description, create_time
         from user_favorite
@@ -21,6 +39,17 @@
         order by create_time desc, id desc
     </select>
 
+    <!--
+        根据用户 ID、收藏类型和目标 ID 查询单条收藏记录
+        表：user_favorite
+        查询列：同上
+        WHERE 条件：
+            user_id = #{userId}
+            and favorite_type = #{favoriteType}
+            and target_id = #{targetId}
+        limit 1：限制返回一条，提高查询效率。
+        #{param}：均为预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectOne" resultMap="UserFavoriteResultMap">
         select id, user_id, favorite_type, target_id, title, description, create_time
         from user_favorite
@@ -30,11 +59,29 @@
         limit 1
     </select>
 
+    <!--
+        插入一条新的收藏记录
+        表：user_favorite
+        插入列：user_id, favorite_type, target_id, title, description
+        值来源：#{userId}, #{favoriteType}, #{targetId}, #{title}, #{description}
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.UserFavorite
+    -->
     <insert id="insert" parameterType="com.tourism.entity.UserFavorite" useGeneratedKeys="true" keyProperty="id">
         insert into user_favorite (user_id, favorite_type, target_id, title, description)
         values (#{userId}, #{favoriteType}, #{targetId}, #{title}, #{description})
     </insert>
 
+    <!--
+        根据用户 ID、收藏类型和目标 ID 删除单条收藏记录
+        表：user_favorite
+        WHERE 条件：
+            user_id = #{userId}
+            and favorite_type = #{favoriteType}
+            and target_id = #{targetId}
+        #{param}：均为预编译参数绑定，防止 SQL 注入。
+    -->
     <delete id="deleteOne">
         delete from user_favorite
         where user_id = #{userId}

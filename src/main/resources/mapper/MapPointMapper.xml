@@ -2,8 +2,21 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    MapPointMapper.xml - 地图点位 SQL 映射文件
+    namespace: com.tourism.mapper.MapPointMapper
+    作用：提供地图点位的查询 SQL 映射，支持查询全部点位及按类型筛选。
+-->
 <mapper namespace="com.tourism.mapper.MapPointMapper">
 
+    <!--
+        resultMap: MapPointResultMap
+        类型：com.tourism.entity.MapPoint
+        设计说明：数据库字段为下划线命名（如 point_name, point_type, sort_no），
+        Java 实体为驼峰命名（pointName, pointType, sortNo）。
+        通过显式 <result> 映射确保正确封装。
+        <id> 标识主键 id。
+    -->
     <resultMap id="MapPointResultMap" type="com.tourism.entity.MapPoint">
         <id column="id" property="id"/>
         <result column="point_name" property="pointName"/>
@@ -20,6 +33,13 @@
         <result column="status" property="status"/>
     </resultMap>
 
+    <!--
+        查询所有有效的地图点位
+        表：map_point
+        查询列：id, point_name, point_type, city, address, description, price, score, tags, longitude, latitude, sort_no, status
+        WHERE 条件：status = 1，仅查询启用状态的点位，过滤已下线或禁用数据。
+        ORDER BY：sort_no asc, id asc，先按排序号升序，排序号相同则按 id 升序。
+    -->
     <select id="selectAll" resultMap="MapPointResultMap">
         select id, point_name, point_type, city, address, description, price, score, tags, longitude, latitude, sort_no, status
         from map_point
@@ -27,6 +47,16 @@
         order by sort_no asc, id asc
     </select>
 
+    <!--
+        根据点位类型查询地图点位
+        表：map_point
+        查询列：同上
+        WHERE 条件：
+            1. status = 1，仅查询启用状态
+            2. point_type = #{pointType}，通过 @Param 映射，预编译绑定防止 SQL 注入
+        ORDER BY：sort_no asc, id asc
+        #{pointType}：预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectByType" resultMap="MapPointResultMap">
         select id, point_name, point_type, city, address, description, price, score, tags, longitude, latitude, sort_no, status
         from map_point

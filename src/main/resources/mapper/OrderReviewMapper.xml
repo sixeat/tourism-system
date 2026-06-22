@@ -2,8 +2,19 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    OrderReviewMapper.xml - 订单评价 SQL 映射文件
+    namespace: com.tourism.mapper.OrderReviewMapper
+    作用：提供订单评价的查询和新增 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.OrderReviewMapper">
 
+    <!--
+        resultMap: OrderReviewResultMap
+        类型：com.tourism.entity.OrderReview
+        设计说明：数据库下划线命名（user_id, order_type, create_time）映射到驼峰命名属性。
+        <id> 标识主键 id。
+    -->
     <resultMap id="OrderReviewResultMap" type="com.tourism.entity.OrderReview">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
@@ -14,6 +25,13 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!--
+        根据用户 ID 查询该用户的所有订单评价
+        表：order_review
+        查询列：id, user_id, order_type, order_id, score, content, create_time
+        WHERE 条件：user_id = #{userId}，预编译绑定防止 SQL 注入。
+        ORDER BY：create_time desc, id desc，按创建时间降序，时间相同则按 id 降序。
+    -->
     <select id="selectByUserId" parameterType="long" resultMap="OrderReviewResultMap">
         select id, user_id, order_type, order_id, score, content, create_time
         from order_review
@@ -21,6 +39,17 @@
         order by create_time desc, id desc
     </select>
 
+    <!--
+        根据用户 ID、订单类型和订单 ID 查询单条评价
+        表：order_review
+        查询列：同上
+        WHERE 条件：
+            user_id = #{userId}
+            and order_type = #{orderType}
+            and order_id = #{orderId}
+        limit 1：限制返回一条记录，提高查询效率。
+        #{param}：均为预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectOne" resultMap="OrderReviewResultMap">
         select id, user_id, order_type, order_id, score, content, create_time
         from order_review
@@ -30,6 +59,16 @@
         limit 1
     </select>
 
+    <!--
+        插入一条新的订单评价
+        表：order_review
+        插入列：user_id, order_type, order_id, score, content
+        值来源：#{userId}, #{orderType}, #{orderId}, #{score}, #{content}
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.OrderReview
+        #{property}：预编译参数绑定，防止 SQL 注入。
+    -->
     <insert id="insert" parameterType="com.tourism.entity.OrderReview" useGeneratedKeys="true" keyProperty="id">
         insert into order_review (user_id, order_type, order_id, score, content)
         values (#{userId}, #{orderType}, #{orderId}, #{score}, #{content})

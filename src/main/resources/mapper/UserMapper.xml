@@ -2,8 +2,45 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    MyBatis Mapper XML 映射文件（UserMapper.xml），负责定义与 com.tourism.mapper.UserMapper 接口对应的 SQL 语句。
+
+    MyBatis 采用“接口 + XML”的映射模式：
+    - Java 接口（UserMapper.java）定义方法签名；
+    - XML 文件（UserMapper.xml）定义具体的 SQL 语句、参数映射和结果映射。
+    MyBatis 在运行时会根据 namespace 将 XML 中的 SQL 与接口方法绑定。
+
+    命名空间（namespace）：
+    - namespace 必须与对应的 Mapper 接口全限定名完全一致，即 com.tourism.mapper.UserMapper。
+    - 这是 MyBatis 将 XML 中的 <select>、<insert>、<update> 标签与接口方法关联的唯一标识。
+    - 如果 namespace 写错，MyBatis 启动时会报 “Invalid bound statement (not found)” 错误。
+-->
 <mapper namespace="com.tourism.mapper.UserMapper">
 
+    <!--
+        resultMap（结果映射）定义：id="UserResultMap"
+        
+        resultMap 用于描述数据库查询结果列（column）如何映射到 Java 实体类的属性（property）。
+        当数据库列名与 Java 属性名不一致时（如下划线命名 vs 驼峰命名），resultMap 是必须的。
+        
+        属性说明：
+        - id：该 resultMap 的唯一标识，供 <select> 标签的 resultMap 属性引用。
+        - type：映射的目标 Java 类型，此处为 com.tourism.entity.User 实体类。
+        
+        子标签说明：
+        - <id>：用于标识主键列，有助于 MyBatis 进行缓存优化和对象唯一性判断。
+        - <result>：用于标识普通列与属性的映射关系。
+        
+        字段映射说明（数据库列名 → Java 属性名）：
+        - id           → id
+        - username     → username
+        - password     → password
+        - phone        → phone
+        - email        → email
+        - role         → role
+        - status       → status
+        - create_time  → createTime（下划线命名映射为驼峰命名）
+    -->
     <resultMap id="UserResultMap" type="com.tourism.entity.User">
         <id column="id" property="id"/>
         <result column="username" property="username"/>
@@ -15,6 +52,24 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!--
+        根据用户名查询单个用户。
+        
+        <select> 标签说明：
+        - id：必须与 UserMapper.java 接口中的方法名完全一致，即 selectByUsername。
+        - parameterType：传入参数的类型，此处为 string（Java 中的 String）。
+        - resultMap：查询结果使用上面定义的 UserResultMap 进行映射。
+        
+        #{parameter} 语法说明：
+        - #{username} 是 MyBatis 的预编译参数占位符语法，表示将传入的 username 参数以安全的方式嵌入 SQL。
+        - MyBatis 会将 #{username} 替换为 JDBC 的 ? 占位符，并自动进行类型转换和转义，
+          有效防止 SQL 注入攻击（这是使用 #{} 而不是 ${} 的核心原因）。
+        - ${} 是字符串直接替换，不做预编译处理，存在 SQL 注入风险，仅用于动态表名/列名场景。
+        
+        limit 1：
+        - 由于 username 在业务上具有唯一性，加 limit 1 可以提高查询效率，
+          数据库找到第一条记录后即可停止扫描。
+    -->
     <select id="selectByUsername" parameterType="string" resultMap="UserResultMap">
         select id, username, password, phone, email, role, status, create_time
         from sys_user
@@ -22,6 +77,19 @@
         limit 1
     </select>
 
+    <!--
+        根据用户 ID 查询单个用户。
+        
+        <select> 标签说明：
+        - id：对应 UserMapper.java 中的 selectById 方法。
+        - parameterType：传入参数为 long（Java 中的 Long 或 long 基本类型）。
+        - resultMap：使用 UserResultMap 进行结果映射。
+        
+        #{id}：将传入的 Long 类型参数安全地绑定到 SQL 的 WHERE 条件中。
+        
+        limit 1：
+        - id 是主键，理论上结果唯一，limit 1 作为防御性编程，确保只返回一条记录。
+    -->
     <select id="selectById" parameterType="long" resultMap="UserResultMap">
         select id, username, password, phone, email, role, status, create_time
         from sys_user
@@ -29,17 +97,68 @@
         limit 1
     </select>
 
+    <!--
+        查询所有用户列表。
+        
+        <select> 标签说明：
+        - id：对应 UserMapper.java 中的 selectAll 方法。
+        - 本查询无参数，因此不需要 parameterType 属性。
+        - resultMap：使用 UserResultMap 进行结果映射。
+        
+        order by id asc：
+        - 按 id 升序排列，确保结果集稳定、可预测，便于后台管理页面展示。
+        - 如果数据量较大，建议后续增加分页参数（如 LIMIT offset, size）。
+    -->
     <select id="selectAll" resultMap="UserResultMap">
         select id, username, password, phone, email, role, status, create_time
         from sys_user
         order by id asc
     </select>
 
+    <!--
+        插入一条新用户记录。
+        
+        <insert> 标签说明：
+        - id：对应 UserMapper.java 中的 insert 方法。
+        - parameterType：传入参数为 User 实体对象，包含 username、password、phone、email、role、status 等字段。
+        
+        useGeneratedKeys="true"：
+        - 开启数据库自增主键的回填功能。
+        - 当数据库（如 MySQL）执行 INSERT 后自动生成主键（AUTO_INCREMENT）时，
+          MyBatis 会将生成的主键值自动设置回传入的 User 对象的 id 属性中。
+        - 这样 Service 层在调用 userMapper.insert(user) 后，可以直接通过 user.getId() 获取新主键。
+        
+        keyProperty="id"：
+        - 指定将生成的主键回填到 User 实体对象的哪个属性上，此处为 id 属性。
+        - 必须与 Java 实体类中的属性名一致（即 User.java 中的 id 字段）。
+        
+        #{属性名}：
+        - #{username}、#{password} 等会从传入的 User 对象中读取对应的 getter 值（如 getUsername()），
+          并作为预编译参数绑定到 SQL 中。
+        - 注意：insert 语句中未包含 id 和 create_time，因为 id 由数据库自增生成，
+          create_time 通常由数据库默认值 CURRENT_TIMESTAMP 自动填充。
+    -->
     <insert id="insert" parameterType="com.tourism.entity.User" useGeneratedKeys="true" keyProperty="id">
         insert into sys_user (username, password, phone, email, role, status)
         values (#{username}, #{password}, #{phone}, #{email}, #{role}, #{status})
     </insert>
 
+    <!--
+        更新用户的基础资料（手机号、邮箱）。
+        
+        <update> 标签说明：
+        - id：对应 UserMapper.java 中的 updateProfile 方法。
+        - parameterType：传入参数为 User 实体对象。
+        
+        更新字段：
+        - phone = #{phone}：更新手机号码
+        - email = #{email}：更新电子邮箱
+        
+        WHERE 条件：
+        - id = #{id}：通过主键定位需要更新的记录，确保只更新该用户的资料。
+        - 注意：此处未修改 password、role、status 等字段，体现“最小更新原则”，
+          避免无意覆盖其他敏感字段。
+    -->
     <update id="updateProfile" parameterType="com.tourism.entity.User">
         update sys_user
         set phone = #{phone},
@@ -47,12 +166,42 @@
         where id = #{id}
     </update>
 
+    <!--
+        更新用户密码。
+        
+        <update> 标签说明：
+        - id：对应 UserMapper.java 中的 updatePassword 方法。
+        - parameterType：传入参数为 User 实体对象。
+        
+        单独定义此方法的原因：
+        - 密码修改涉及额外的安全校验（如验证旧密码），与基础资料更新分离有助于权限控制和审计。
+        - 如果系统接入密码加密，可以单独在此 SQL 或 Service 层中处理加密逻辑。
+        
+        WHERE 条件：
+        - id = #{id}：确保只更新当前用户的密码，防止横向越权修改他人密码。
+    -->
     <update id="updatePassword" parameterType="com.tourism.entity.User">
         update sys_user
         set password = #{password}
         where id = #{id}
     </update>
 
+    <!--
+        管理员更新用户全部信息。
+        
+        <update> 标签说明：
+        - id：对应 UserMapper.java 中的 updateByAdmin 方法。
+        - parameterType：传入参数为 User 实体对象。
+        
+        与 updateProfile 的区别：
+        - 本方法允许修改 role（角色）和 status（状态），权限更高。
+        - 通常由后台管理系统的管理员调用，普通用户不应有权限调用此接口。
+        
+        更新字段：
+        - phone、email：基础联系方式
+        - role：用户角色（如将普通用户提升为管理员）
+        - status：账号状态（如冻结/解冻用户）
+    -->
     <update id="updateByAdmin" parameterType="com.tourism.entity.User">
         update sys_user
         set phone = #{phone},
@@ -62,6 +211,21 @@
         where id = #{id}
     </update>
 
+    <!--
+        更新用户状态（启用/禁用）。
+        
+        <update> 标签说明：
+        - id：对应 UserMapper.java 中的 updateStatus 方法。
+        - parameterType：传入参数为 User 实体对象。
+        
+        使用场景：
+        - 管理员在后台冻结违规用户账号时，将 status 设为 0。
+        - 管理员恢复用户账号时，将 status 重新设为 1。
+        
+        单独提供此方法的好处：
+        - 粒度更细，不需要同时传递 phone、email 等无关字段，简化调用方。
+        - 便于权限控制：可以单独给管理员分配“修改状态”的权限，而不暴露完整的用户信息修改接口。
+    -->
     <update id="updateStatus" parameterType="com.tourism.entity.User">
         update sys_user
         set status = #{status}

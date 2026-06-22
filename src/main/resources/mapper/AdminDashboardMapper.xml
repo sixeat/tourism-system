@@ -2,36 +2,86 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    AdminDashboardMapper.xml - 后台管理仪表盘统计 SQL 映射文件
+    namespace: com.tourism.mapper.AdminDashboardMapper
+    作用：将 Mapper 接口中的统计方法与具体的 SQL 语句绑定。
+    本文件中的 SQL 均为聚合查询，用于仪表盘的数据看板展示。
+-->
 <mapper namespace="com.tourism.mapper.AdminDashboardMapper">
 
+    <!--
+        统计注册用户总数
+        表：sys_user
+        逻辑：count(*) 统计 sys_user 表中所有记录，返回 int 类型
+        #{param} 无参数，直接全表计数
+    -->
     <select id="countUsers" resultType="int">
         select count(*) from sys_user
     </select>
 
+    <!--
+        统计景点总数
+        表：scenic_spot
+        逻辑：count(*) 统计 scenic_spot 表中所有记录，返回 int 类型
+    -->
     <select id="countScenicSpots" resultType="int">
         select count(*) from scenic_spot
     </select>
 
+    <!--
+        统计酒店总数
+        表：hotel
+        逻辑：count(*) 统计 hotel 表中所有记录，返回 int 类型
+    -->
     <select id="countHotels" resultType="int">
         select count(*) from hotel
     </select>
 
+    <!--
+        统计门票总数
+        表：ticket
+        逻辑：count(*) 统计 ticket 表中所有记录，返回 int 类型
+    -->
     <select id="countTickets" resultType="int">
         select count(*) from ticket
     </select>
 
+    <!--
+        统计旅游路线总数
+        表：travel_route
+        逻辑：count(*) 统计 travel_route 表中所有记录，返回 int 类型
+    -->
     <select id="countRoutes" resultType="int">
         select count(*) from travel_route
     </select>
 
+    <!--
+        统计酒店订单总数
+        表：hotel_order
+        逻辑：count(*) 统计 hotel_order 表中所有记录，返回 int 类型
+    -->
     <select id="countHotelOrders" resultType="int">
         select count(*) from hotel_order
     </select>
 
+    <!--
+        统计门票订单总数
+        表：ticket_order
+        逻辑：count(*) 统计 ticket_order 表中所有记录，返回 int 类型
+    -->
     <select id="countTicketOrders" resultType="int">
         select count(*) from ticket_order
     </select>
 
+    <!--
+        计算有效订单营收总额
+        逻辑：联合查询 hotel_order 和 ticket_order 两张表，通过子查询 union all 合并结果，
+        过滤条件：order_status <> 'CANCELLED'（排除已取消订单），
+        对 total_amount 求和，使用 coalesce(sum(...), 0) 处理无数据时返回 0 而非 null。
+        结果类型：java.math.BigDecimal，支持高精度金额计算。
+        注意：<> 在 XML 中需转义为 &lt;&gt;，避免被解析为标签。
+    -->
     <select id="sumValidRevenue" resultType="java.math.BigDecimal">
         select coalesce(sum(total_amount), 0)
         from (

@@ -2,8 +2,19 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    RouteSpotMapper.xml - 旅游路线与景点关联 SQL 映射文件
+    namespace: com.tourism.mapper.RouteSpotMapper
+    作用：管理旅游路线与景点之间的多对多关联关系，提供查询、新增和删除 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.RouteSpotMapper">
 
+    <!--
+        resultMap: RouteSpotResultMap
+        类型：com.tourism.entity.RouteSpot
+        设计说明：下划线列名（route_id, scenic_id, day_no, sort_no）映射到驼峰属性。
+        <id> 标识主键 id。
+    -->
     <resultMap id="RouteSpotResultMap" type="com.tourism.entity.RouteSpot">
         <id column="id" property="id"/>
         <result column="route_id" property="routeId"/>
@@ -12,6 +23,13 @@
         <result column="sort_no" property="sortNo"/>
     </resultMap>
 
+    <!--
+        根据旅游路线 ID 查询该路线包含的所有景点关联信息
+        表：route_spot
+        查询列：id, route_id, scenic_id, day_no, sort_no
+        WHERE 条件：route_id = #{routeId}，预编译绑定防止 SQL 注入。
+        ORDER BY：day_no asc, sort_no asc，按游玩天数升序、当天顺序升序排列。
+    -->
     <select id="selectByRouteId" parameterType="long" resultMap="RouteSpotResultMap">
         select id, route_id, scenic_id, day_no, sort_no
         from route_spot
@@ -19,11 +37,27 @@
         order by day_no asc, sort_no asc
     </select>
 
+    <!--
+        插入一条路线与景点的关联记录
+        表：route_spot
+        插入列：route_id, scenic_id, day_no, sort_no
+        值来源：#{routeId}, #{scenicId}, #{dayNo}, #{sortNo}
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.RouteSpot
+    -->
     <insert id="insert" parameterType="com.tourism.entity.RouteSpot" useGeneratedKeys="true" keyProperty="id">
         insert into route_spot (route_id, scenic_id, day_no, sort_no)
         values (#{routeId}, #{scenicId}, #{dayNo}, #{sortNo})
     </insert>
 
+    <!--
+        根据旅游路线 ID 删除该路线下的所有景点关联记录
+        表：route_spot
+        WHERE 条件：route_id = #{routeId}
+        典型场景：更新路线时先清除旧关联，再重新插入新关联。
+        #{routeId}：预编译参数绑定，防止 SQL 注入。
+    -->
     <delete id="deleteByRouteId" parameterType="long">
         delete from route_spot where route_id = #{routeId}
     </delete>

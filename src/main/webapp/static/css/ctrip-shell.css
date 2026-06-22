@@ -1,1 +1,362 @@
-*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#eef5fc;color:#1f2937}.app-shell{min-height:100vh;display:grid;grid-template-columns:198px 1fr}.side-nav{background:#fff;border-right:1px solid #e5edf6;padding:18px;overflow-y:auto;z-index:5}.menu-toggle{width:36px;height:36px;border:0;background:transparent;color:#526071;font-size:26px;cursor:pointer;margin-bottom:18px}.side-link{width:100%;border:0;background:transparent;border-radius:22px;padding:13px 16px;margin:3px 0;display:flex;align-items:center;gap:12px;color:#2f3b4a;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;text-decoration:none}.side-link.active,.side-link:hover{background:#0b8ff6;color:#fff}.side-icon{width:24px;color:#0b8ff6;text-align:center;font-weight:800}.side-link.active .side-icon,.side-link:hover .side-icon{color:#fff}.side-divider{height:1px;background:#e5edf6;margin:18px 0}.main-area{min-width:0;display:grid;grid-template-rows:86px 1fr}.top-header{background:#fff;border-bottom:1px solid #e5edf6;display:grid;grid-template-columns:240px minmax(320px,520px) 1fr;gap:28px;align-items:center;padding:0 28px;z-index:4}.brand{display:flex;align-items:center;gap:10px;color:#1688f8;font-size:30px;font-weight:900;text-decoration:none}.brand-mark{width:36px;height:36px;border-radius:50%;background:conic-gradient(from 40deg,#0b8ff6,#4db6ff,#ff9f1c,#0b8ff6);display:inline-flex;align-items:center;justify-content:center;color:#fff}.global-search{position:relative;display:grid;grid-template-columns:1fr 68px;border:1px solid #b8d8ff;border-radius:10px;overflow:visible;background:#fff;height:42px}.global-search input{border:0;outline:0;padding:0 18px;font-size:15px;font-family:inherit}.global-search button{border:0;background:#0788f7;color:#fff;font-size:22px;cursor:pointer}.top-actions{justify-self:end;display:flex;align-items:center;gap:14px;color:#3f4a59;white-space:nowrap}.top-actions button,.top-actions a{border:0;border-radius:999px;background:transparent;color:inherit;padding:8px 10px;cursor:pointer;font-family:inherit;font-size:15px;text-decoration:none}.top-actions button:hover,.top-actions a:hover,.user-chip{background:#eef6ff;color:#0b7de3}.user-chip{padding:8px 12px;border-radius:999px;font-weight:800}.page-content{padding:28px 38px 48px;overflow-y:auto}.hero-panel{border-radius:26px;padding:32px;color:#fff;background:linear-gradient(135deg,#0b8ff6,#14b8a6);box-shadow:0 18px 46px rgba(11,143,246,.22);margin-bottom:22px}.hero-panel h1{margin:0 0 12px;font-size:38px}.hero-panel p{margin:0;color:rgba(255,255,255,.9);line-height:1.8}.panel,.card{background:#fff;border:1px solid #e5edf6;border-radius:22px;padding:24px;box-shadow:0 12px 30px rgba(20,40,80,.06);margin-bottom:20px}.grid,.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}label{display:block;color:#526071;font-size:13px;font-weight:900}input,textarea,select{width:100%;margin-top:6px;padding:12px;border:1px solid #d6e3f0;border-radius:12px;font-family:inherit;background:#fff}.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button.primary,a.primary,button.secondary,a.secondary{border:0;border-radius:12px;padding:11px 15px;cursor:pointer;font-family:inherit;font-weight:900;text-decoration:none}button.primary,a.primary{background:#0b8ff6;color:#fff}button.secondary,a.secondary{background:#eef6ff;color:#0b7de3}.muted{color:#667085;line-height:1.75;font-size:14px}.title{font-size:20px;font-weight:900;margin-bottom:6px}.price{color:#f97316;font-size:22px;font-weight:900}.global-suggest{position:fixed;z-index:9999;display:none;overflow:hidden;background:#fff;border:1px solid #d6e8ff;border-radius:16px;box-shadow:0 18px 48px rgba(15,40,80,.16)}.global-suggest.open{display:block}.global-suggest-item{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;padding:11px 13px;border-bottom:1px solid #eef3f8;cursor:pointer}.global-suggest-item:hover,.global-suggest-item.active{background:#eef6ff}.global-suggest-icon{width:34px;height:34px;border-radius:12px;background:#eef6ff;color:#0b7de3;display:inline-flex;align-items:center;justify-content:center;font-weight:900}.global-suggest-title{color:#0f172a;font-weight:900}.global-suggest-meta,.global-suggest-action{color:#667085;font-size:12px}.global-suggest-action{color:#0b7de3;font-weight:900}@media(max-width:980px){.app-shell{grid-template-columns:1fr}.side-nav{display:none}.top-header{grid-template-columns:1fr;height:auto;padding:14px;gap:12px}}
+/* ============================================================
+   智旅旅行前端公共壳样式表（ctrip-shell.css）
+   
+   本文件为所有用户端页面（home、hotels、map、orders、routes等）
+   提供统一的布局框架、侧边导航、顶部搜索栏和基础组件样式。
+   采用两列布局：左侧固定宽度侧边栏 + 右侧自适应主内容区。
+   ============================================================ */
+
+/* 全局盒模型重置 */
+* {
+    box-sizing: border-box;
+}
+
+/* 页面基础：浅蓝灰背景，微软雅黑字体栈 */
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: #eef5fc;
+    color: #1f2937;
+}
+
+/* ---------------- 应用壳布局：侧边栏 + 主内容 ---------------- */
+.app-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 198px 1fr;
+}
+
+/* ---------------- 左侧侧边栏导航 ---------------- */
+.side-nav {
+    background: #fff;
+    border-right: 1px solid #e5edf6;
+    padding: 18px;
+    overflow-y: auto;
+    z-index: 5;
+}
+
+/* 移动端菜单切换按钮（默认隐藏，小屏显示） */
+.menu-toggle {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    color: #526071;
+    font-size: 26px;
+    cursor: pointer;
+    margin-bottom: 18px;
+}
+
+/* 导航链接：首页、路线、酒店、门票、地图、AI、订单、个人中心 */
+.side-link {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    border-radius: 22px;
+    padding: 13px 16px;
+    margin: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #2f3b4a;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    text-decoration: none;
+}
+
+/* 当前页面激活状态：蓝底白字 */
+.side-link.active,
+.side-link:hover {
+    background: #0b8ff6;
+    color: #fff;
+}
+
+/* 导航图标样式 */
+.side-icon {
+    width: 24px;
+    color: #0b8ff6;
+    text-align: center;
+    font-weight: 800;
+}
+
+/* 激活和悬停时图标变白 */
+.side-link.active .side-icon,
+.side-link:hover .side-icon {
+    color: #fff;
+}
+
+/* 分割线：区分主功能与个人功能 */
+.side-divider {
+    height: 1px;
+    background: #e5edf6;
+    margin: 18px 0;
+}
+
+/* ---------------- 主内容区：顶部 header + 页面内容 ---------------- */
+.main-area {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 86px 1fr;
+}
+
+/* 顶部 Header：品牌 + 全局搜索 + 用户操作 */
+.top-header {
+    background: #fff;
+    border-bottom: 1px solid #e5edf6;
+    display: grid;
+    grid-template-columns: 240px minmax(320px, 520px) 1fr;
+    gap: 28px;
+    align-items: center;
+    padding: 0 28px;
+    z-index: 4;
+}
+
+/* 品牌 Logo 与名称 */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1688f8;
+    font-size: 30px;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+/* 品牌图标：彩色渐变圆形 */
+.brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: conic-gradient(from 40deg, #0b8ff6, #4db6ff, #ff9f1c, #0b8ff6);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+/* 全局搜索框：输入框 + 搜索按钮 */
+.global-search {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 68px;
+    border: 1px solid #b8d8ff;
+    border-radius: 10px;
+    overflow: visible;
+    background: #fff;
+    height: 42px;
+}
+
+.global-search input {
+    border: 0;
+    outline: 0;
+    padding: 0 18px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.global-search button {
+    border: 0;
+    background: #0788f7;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+/* 顶部右侧操作区：用户昵称、我的订单、联系客服、退出 */
+.top-actions {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #3f4a59;
+    white-space: nowrap;
+}
+
+.top-actions button,
+.top-actions a {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.top-actions button:hover,
+.top-actions a:hover {
+    color: #0b8ff6;
+}
+
+/* 用户昵称 chip */
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #0b7de3;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+/* ---------------- 页面内容区 ---------------- */
+.page-content {
+    padding: 20px 34px 44px;
+    overflow-y: auto;
+}
+
+/* Hero 面板：每个页面顶部的大标题区 */
+.hero-panel {
+    margin-bottom: 18px;
+}
+
+.hero-panel h1 {
+    margin: 0 0 6px;
+    font-size: 32px;
+}
+
+.hero-panel p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* 通用卡片容器 */
+.panel {
+    background: #fff;
+    border: 1px solid #e5edf6;
+    border-radius: 22px;
+    padding: 22px;
+    box-shadow: 0 12px 30px rgba(20, 40, 80, 0.06);
+    margin-bottom: 20px;
+}
+
+/* 卡片标题 */
+.title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+/* 卡片内辅助文字 */
+.muted {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* 价格显示 */
+.price {
+    color: #f56c0a;
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.price small {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+/* 操作按钮行 */
+.action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+/* 主按钮（蓝色） */
+.action-row .primary,
+button.primary {
+    border: 0;
+    border-radius: 12px;
+    background: #0b8ff6;
+    color: #fff;
+    padding: 10px 18px;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+/* 次按钮（灰蓝） */
+.action-row .secondary,
+button.secondary {
+    border: 1px solid #e5edf6;
+    border-radius: 12px;
+    background: #f8fbff;
+    color: #0b7de3;
+    padding: 10px 18px;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+/* 结果网格：用于展示景点、酒店、门票等列表 */
+.result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+/* 通用卡片 */
+.card {
+    background: #fff;
+    border: 1px solid #e5edf6;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 10px 26px rgba(20, 40, 80, 0.05);
+}
+
+/* 表单网格：用于搜索条件、路线参数等 */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.form-grid label {
+    display: block;
+    font-weight: 900;
+    font-size: 14px;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.form-grid input,
+.form-grid select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d6e3f0;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+/* 响应式：1100px 以下调整布局 */
+@media (max-width: 1100px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+    .side-nav {
+        display: none;
+    }
+    .top-header {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 10px;
+    }
+    .page-content {
+        padding: 14px;
+    }
+}

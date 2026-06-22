@@ -2,8 +2,20 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    HotelMapper.xml - 酒店信息 SQL 映射文件
+    namespace: com.tourism.mapper.HotelMapper
+    作用：提供酒店信息的增删改查（CRUD）SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.HotelMapper">
 
+    <!--
+        resultMap: HotelResultMap
+        类型：com.tourism.entity.Hotel
+        设计说明：数据库字段采用下划线命名（如 hotel_name），Java 实体采用驼峰命名（hotelName）。
+        通过显式 <result> 映射，确保 MyBatis 正确将查询结果封装为 Hotel 对象。
+        <id> 标签标识主键 id，用于结果集缓存和对象去重。
+    -->
     <resultMap id="HotelResultMap" type="com.tourism.entity.Hotel">
         <id column="id" property="id"/>
         <result column="hotel_name" property="hotelName"/>
@@ -14,6 +26,14 @@
         <result column="status" property="status"/>
     </resultMap>
 
+    <!--
+        根据城市名称查询酒店列表
+        表：hotel
+        查询列：id, hotel_name, city, address, level, description, status
+        WHERE 条件：city = #{city}，通过 #{city} 预编译参数绑定，防止 SQL 注入攻击。
+        ORDER BY：id asc，按主键升序排列，保证结果集顺序稳定。
+        parameterType：string，接收 Java 字符串参数。
+    -->
     <select id="selectByCity" parameterType="string" resultMap="HotelResultMap">
         select id, hotel_name, city, address, level, description, status
         from hotel
@@ -21,23 +41,54 @@
         order by id asc
     </select>
 
+    <!--
+        查询所有酒店信息
+        表：hotel
+        查询列：id, hotel_name, city, address, level, description, status
+        ORDER BY：id asc，按主键升序排列。
+    -->
     <select id="selectAll" resultMap="HotelResultMap">
         select id, hotel_name, city, address, level, description, status
         from hotel
         order by id asc
     </select>
 
+    <!--
+        根据酒店 ID 查询单个酒店详情
+        表：hotel
+        查询列：id, hotel_name, city, address, level, description, status
+        WHERE 条件：id = #{id}，通过 #{id} 预编译参数绑定，防止 SQL 注入。
+        parameterType：long，接收 Java Long 类型参数。
+    -->
     <select id="selectById" parameterType="long" resultMap="HotelResultMap">
         select id, hotel_name, city, address, level, description, status
         from hotel
         where id = #{id}
     </select>
 
+    <!--
+        插入一条新的酒店记录
+        表：hotel
+        插入列：hotel_name, city, address, level, description, status
+        值来源：#{hotelName}, #{city}, #{address}, #{level}, #{description}, #{status}
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键值赋值给传入 Hotel 对象的 id 属性。
+        parameterType：com.tourism.entity.Hotel
+        #{property}：预编译参数绑定，防止 SQL 注入，同时自动处理 Java 类型到 JDBC 类型的转换。
+    -->
     <insert id="insert" parameterType="com.tourism.entity.Hotel" useGeneratedKeys="true" keyProperty="id">
         insert into hotel (hotel_name, city, address, level, description, status)
         values (#{hotelName}, #{city}, #{address}, #{level}, #{description}, #{status})
     </insert>
 
+    <!--
+        根据酒店 ID 更新酒店信息
+        表：hotel
+        SET 子句：全字段更新，所有列均通过 #{property} 绑定传入实体属性值。
+        WHERE 条件：id = #{id}，确保仅更新指定记录。
+        parameterType：com.tourism.entity.Hotel
+        注意：此更新为全量更新，若字段为 null，数据库对应列会被更新为 null。
+    -->
     <update id="updateById" parameterType="com.tourism.entity.Hotel">
         update hotel
         set hotel_name = #{hotelName},
@@ -49,6 +100,12 @@
         where id = #{id}
     </update>
 
+    <!--
+        根据酒店 ID 删除酒店记录
+        表：hotel
+        WHERE 条件：id = #{id}，通过 #{id} 预编译参数绑定，防止 SQL 注入。
+        parameterType：long
+    -->
     <delete id="deleteById" parameterType="long">
         delete from hotel where id = #{id}
     </delete>

@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- ========================================================== -->
+<!--  Spring 根应用上下文配置文件（spring-context.xml）             -->
+<!--  文件路径：classpath:spring/spring-context.xml               -->
+<!--  作用：定义 Spring 的【非 Web 层】基础设施和组件，
+       包括 Service 层组件扫描、声明式事务、以及整合 MyBatis 的持久层配置。
+       该上下文由 web.xml 中的 ContextLoaderListener 在 Web 应用启动时加载，
+       作为 Root ApplicationContext，与 DispatcherServlet 的 Web 子上下文形成父子容器关系。  -->
+<!-- ========================================================== -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:tx="http://www.springframework.org/schema/tx"
@@ -8,7 +16,37 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  组件扫描（Component Scan）                                  -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- context:component-scan：启用 Spring 的类路径组件扫描，
+         自动检测并注册带有 @Component、@Service、@Repository、@Controller 等注解的类为 Bean。
+         此处扫描三个包：
+         - com.tourism.service    ：业务逻辑层（Service），封装业务规则与事务边界；
+         - com.tourism.common     ：通用工具、常量、异常等公共类；
+         - com.tourism.utils      ：辅助工具类（如日期处理、字符串工具等）。
+         注意：Controller 层不在此扫描，而是由 spring-mvc.xml 单独扫描，
+         以便区分父子容器职责，避免 Bean 重复定义和循环依赖。 -->
     <context:component-scan base-package="com.tourism.service,com.tourism.common,com.tourism.utils"/>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  声明式事务管理（Declarative Transaction Management）        -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- tx:annotation-driven：开启基于注解的声明式事务，
+         在类或方法上标注 @Transactional 即可自动创建事务代理，
+         transaction-manager 属性指定使用哪个事务管理器，此处引用 spring-mybatis.xml 中定义的 transactionManager。
+         底层基于 Spring AOP 实现，对 @Transactional 方法进行拦截，
+         自动处理事务的开启、提交、回滚（遇到 RuntimeException 时自动回滚）。 -->
     <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  导入其他 Spring 配置文件（Modular Configuration）             -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- import：将 spring-mybatis.xml 中的 Bean 定义合并到当前上下文中，
+         实现配置模块化拆分，提高可读性和维护性：
+         - spring-context.xml 负责 Service 层、事务、扫描；
+         - spring-mybatis.xml 负责数据源、SqlSessionFactory、Mapper 扫描、事务管理器。
+         合并后，Service 层的 Bean 可以通过 @Autowired 注入 Mapper 接口，
+         事务管理器也可以正确管理 Mapper 执行的数据库操作。 -->
     <import resource="classpath:spring/spring-mybatis.xml"/>
 </beans>

@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- ========================================================== -->
+<!--  Spring-MyBatis 整合配置文件（spring-mybatis.xml）               -->
+<!--  文件路径：classpath:spring/spring-mybatis.xml               -->
+<!--  作用：定义数据访问层（DAO/Mapper）的全部基础设施，包括：
+       - 外部化属性加载（数据库连接参数）；
+       - 数据源（DataSource）配置；
+       - MyBatis SqlSessionFactory 配置；
+       - Spring 声明式事务管理器（DataSourceTransactionManager）；
+       - Mapper 接口自动扫描（MapperScannerConfigurer）。
+       该文件通过 spring-context.xml 的 <import> 被引入到 Root ApplicationContext 中。  -->
+<!-- ========================================================== -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -6,31 +17,96 @@
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  外部化属性加载（Property Placeholder）                      -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- context:property-placeholder：加载 classpath 根目录下的 application.properties 文件，
+         将其中的键值对（如 db.driver、db.url）注册为 Spring 环境变量，
+         后续 Bean 配置中可以通过 ${propertyName} 语法引用这些值，
+         实现数据库连接信息与 Spring 配置的解耦，便于不同环境（开发、测试、生产）切换配置。 -->
     <context:property-placeholder location="classpath:application.properties"/>
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  数据源（DataSource）配置                                    -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- 定义 dataSource Bean，使用 Spring 提供的 DriverManagerDataSource。
+         DriverManagerDataSource 是 Spring 内置的简单数据源实现，
+         通过标准 JDBC DriverManager 获取数据库连接，适合开发阶段和轻量级应用。
+         生产环境建议替换为 Druid、HikariCP 等数据库连接池，以获得连接复用、性能监控、
+         SQL 防火墙、慢 SQL 检测等企业级功能。 -->
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <!-- driverClassName：JDBC 驱动类名，对应 application.properties 中的 db.driver 属性，
+             使用 MySQL 8.x 新版驱动 com.mysql.cj.jdbc.Driver。 -->
         <property name="driverClassName" value="${db.driver}"/>
+        <!-- url：数据库连接 URL，对应 application.properties 中的 db.url，
+             包含主机、端口、数据库名、字符编码、时区等参数。 -->
         <property name="url" value="${db.url}"/>
+        <!-- username：数据库连接用户名，对应 application.properties 中的 db.username。 -->
         <property name="username" value="${db.username}"/>
+        <!-- password：数据库连接密码，对应 application.properties 中的 db.password，
+             生产环境应通过环境变量注入，避免明文存储。 -->
         <property name="password" value="${db.password}"/>
     </bean>
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  MyBatis SqlSessionFactory 配置                            -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- 定义 sqlSessionFactory Bean，使用 MyBatis-Spring 提供的 SqlSessionFactoryBean。
+         SqlSessionFactoryBean 是整合 Spring 与 MyBatis 的核心桥梁，
+         在 Spring 容器启动时创建 SqlSessionFactory 实例，并托管其生命周期。
+         Mapper 接口通过 SqlSession 执行 SQL，而 SqlSession 由 SqlSessionFactory 生成。 -->
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- dataSource：引用上面定义的 dataSource Bean，
+             SqlSessionFactory 使用该数据源获取数据库连接。 -->
         <property name="dataSource" ref="dataSource"/>
+        <!-- typeAliasesPackage：设置实体类包路径，
+             MyBatis 会自动扫描 com.tourism.entity 包下的所有类，
+             为它们注册短别名（如 ScenicSpot、User、HotelOrder），
+             在 Mapper XML 中可直接使用短名而非全限定类名，简化 XML 编写。 -->
         <property name="typeAliasesPackage" value="com.tourism.entity"/>
+        <!-- mapperLocations：指定 Mapper XML 文件的扫描路径，
+             classpath*:mapper/*.xml 表示在类路径下的所有 mapper 目录中查找 XML 文件，
+             每个 XML 文件定义了 SQL 语句与 Java Mapper 接口方法的映射。 -->
         <property name="mapperLocations" value="classpath*:mapper/*.xml"/>
+
+        <!-- configuration：内嵌 MyBatis 核心配置（Configuration），
+             用于设置 MyBatis 的运行时行为参数。 -->
         <property name="configuration">
             <bean class="org.apache.ibatis.session.Configuration">
+                <!-- mapUnderscoreToCamelCase：启用下划线命名与驼峰命名的自动映射转换。
+                     当数据库列名为 scenic_name（下划线）时，
+                     MyBatis 会自动映射到 Java 属性 scenicName（驼峰），
+                     无需手动编写 resultMap 进行字段映射，大幅提升开发效率。 -->
                 <property name="mapUnderscoreToCamelCase" value="true"/>
             </bean>
         </property>
     </bean>
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  事务管理器（Transaction Manager）                           -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- 定义 transactionManager Bean，使用 Spring JDBC 的 DataSourceTransactionManager。
+         这是 Spring 提供的基于数据源（JDBC）的本地事务管理器，
+         通过 Spring AOP 在 @Transactional 方法周围创建事务代理，
+         自动管理事务的开始、提交、回滚（当发生未捕获 RuntimeException 时回滚）。
+         它与 sqlSessionFactory 共享同一个 dataSource，
+         确保 MyBatis 执行的 SQL 操作和 Spring 事务管理使用同一个数据库连接，
+         从而保证事务的原子性（Atomicity）和一致性（Consistency）。 -->
     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- dataSource：引用上面的 dataSource Bean，事务管理器通过它获取连接并控制事务边界。 -->
         <property name="dataSource" ref="dataSource"/>
     </bean>
 
+    <!-- ---------------------------------------------------------- -->
+    <!--  Mapper 接口自动扫描（MapperScannerConfigurer）              -->
+    <!-- ---------------------------------------------------------- -->
+    <!-- 配置 MapperScannerConfigurer，自动扫描 com.tourism.mapper 包下的所有接口，
+         为每个 Mapper 接口生成动态代理对象（基于 MyBatis 的 MapperProxy），
+         并将这些代理对象注册为 Spring Bean，从而可以在 Service 层通过 @Autowired 直接注入使用。
+         这避免了为每个 Mapper 手动编写 <bean> 定义，实现"约定优于配置"。
+         生成的 Mapper Bean 默认名称为接口名的首字母小写（如 UserMapper -> userMapper）。 -->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- basePackage：Mapper 接口所在的包路径，扫描器会递归扫描该包及其子包。 -->
         <property name="basePackage" value="com.tourism.mapper"/>
     </bean>
 </beans>

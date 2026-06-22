@@ -2,8 +2,23 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    TicketOrderMapper.xml - 门票订单 SQL 映射文件
+    namespace: com.tourism.mapper.TicketOrderMapper
+    作用：提供门票订单的创建、查询和状态更新的 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.TicketOrderMapper">
 
+    <!--
+        插入一条新的门票订单
+        表：ticket_order
+        插入列：user_id, ticket_id, visit_date, quantity, total_amount, order_status
+        值来源：#{userId}, #{ticketId}, #{visitDate}, #{quantity}, #{totalAmount}, #{orderStatus}
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.TicketOrder
+        #{property}：预编译参数绑定，防止 SQL 注入。
+    -->
     <insert id="insert" parameterType="com.tourism.entity.TicketOrder" useGeneratedKeys="true" keyProperty="id">
         insert into ticket_order (
             user_id, ticket_id, visit_date, quantity, total_amount, order_status
@@ -12,12 +27,28 @@
         )
     </insert>
 
+    <!--
+        根据订单 ID 查询门票订单详情
+        表：ticket_order
+        查询列：id, user_id, ticket_id, visit_date, quantity, total_amount, order_status, create_time
+        WHERE 条件：id = #{id}
+        resultType：com.tourism.entity.TicketOrder
+        parameterType：long
+        #{id}：预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectById" parameterType="long" resultType="com.tourism.entity.TicketOrder">
         select id, user_id, ticket_id, visit_date, quantity, total_amount, order_status, create_time
         from ticket_order
         where id = #{id}
     </select>
 
+    <!--
+        更新门票订单状态
+        表：ticket_order
+        SET 子句：order_status = #{orderStatus}
+        WHERE 条件：id = #{id}
+        #{id} 和 #{orderStatus}：通过 @Param 注解映射，预编译绑定防止 SQL 注入。
+    -->
     <update id="updateStatus">
         update ticket_order
         set order_status = #{orderStatus}

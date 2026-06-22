@@ -2,8 +2,19 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    TicketMapper.xml - 门票信息 SQL 映射文件
+    namespace: com.tourism.mapper.TicketMapper
+    作用：提供门票信息的完整 CRUD 以及库存扣减/恢复的 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.TicketMapper">
 
+    <!--
+        resultMap: TicketResultMap
+        类型：com.tourism.entity.Ticket
+        设计说明：下划线列名（scenic_id, ticket_name, available_date）映射到驼峰属性。
+        <id> 标识主键 id。
+    -->
     <resultMap id="TicketResultMap" type="com.tourism.entity.Ticket">
         <id column="id" property="id"/>
         <result column="scenic_id" property="scenicId"/>
@@ -13,12 +24,26 @@
         <result column="available_date" property="availableDate"/>
     </resultMap>
 
+    <!--
+        查询所有门票信息
+        表：ticket
+        查询列：id, scenic_id, ticket_name, price, stock, available_date
+        ORDER BY：id asc，按主键升序排列。
+    -->
     <select id="selectAll" resultMap="TicketResultMap">
         select id, scenic_id, ticket_name, price, stock, available_date
         from ticket
         order by id asc
     </select>
 
+    <!--
+        根据景点 ID 查询该景点下的所有门票
+        表：ticket
+        查询列：同上
+        WHERE 条件：scenic_id = #{scenicId}，预编译绑定防止 SQL 注入。
+        ORDER BY：available_date asc，按可用日期升序，方便用户按日期选择。
+        parameterType：long
+    -->
     <select id="selectByScenicId" parameterType="long" resultMap="TicketResultMap">
         select id, scenic_id, ticket_name, price, stock, available_date
         from ticket
@@ -26,12 +51,29 @@
         order by available_date asc
     </select>
 
+    <!--
+        根据门票 ID 查询单个门票详情
+        表：ticket
+        查询列：同上
+        WHERE 条件：id = #{id}
+        parameterType：long
+    -->
     <select id="selectById" parameterType="long" resultMap="TicketResultMap">
         select id, scenic_id, ticket_name, price, stock, available_date
         from ticket
         where id = #{id}
     </select>
 
+    <!--
+        扣减门票库存（购票时调用）
+        表：ticket
+        SET 子句：stock = stock - #{quantity}
+        WHERE 条件：
+            1. id = #{id}
+            2. stock >= #{quantity}：乐观锁条件，确保库存充足才扣减，防止超卖
+        #{id} 和 #{quantity}：通过 @Param 注解映射，预编译绑定防止 SQL 注入。
+        返回：受影响的行数，1 表示成功，0 表示库存不足。
+    -->
     <update id="deductStock">
         update ticket
         set stock = stock - #{quantity}
@@ -39,17 +81,39 @@
           and stock >= #{quantity}
     </update>
 
+    <!--
+        恢复门票库存（取消订单时调用）
+        表：ticket
+        SET 子句：stock = stock + #{quantity}
+        WHERE 条件：id = #{id}
+        #{id} 和 #{quantity}：通过 @Param 注解映射，预编译绑定防止 SQL 注入。
+    -->
     <update id="restoreStock">
         update ticket
         set stock = stock + #{quantity}
         where id = #{id}
     </update>
 
+    <!--
+        插入一条新的门票记录
+        表：ticket
+        插入列：scenic_id, ticket_name, price, stock, available_date
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.Ticket
+    -->
     <insert id="insert" parameterType="com.tourism.entity.Ticket" useGeneratedKeys="true" keyProperty="id">
         insert into ticket (scenic_id, ticket_name, price, stock, available_date)
         values (#{scenicId}, #{ticketName}, #{price}, #{stock}, #{availableDate})
     </insert>
 
+    <!--
+        根据门票 ID 更新门票信息
+        表：ticket
+        SET 子句：全字段更新
+        WHERE 条件：id = #{id}
+        parameterType：com.tourism.entity.Ticket
+    -->
     <update id="updateById" parameterType="com.tourism.entity.Ticket">
         update ticket
         set scenic_id = #{scenicId},
@@ -60,6 +124,12 @@
         where id = #{id}
     </update>
 
+    <!--
+        根据门票 ID 删除门票记录
+        表：ticket
+        WHERE 条件：id = #{id}
+        parameterType：long
+    -->
     <delete id="deleteById" parameterType="long">
         delete from ticket where id = #{id}
     </delete>

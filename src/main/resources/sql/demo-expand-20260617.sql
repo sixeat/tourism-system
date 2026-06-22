@@ -1,9 +1,36 @@
+-- ============================================================
+-- demo-expand-20260617.sql — 演示数据扩展脚本
+--
+-- 脚本目的：
+-- 1. 为 tourism_system 数据库补充 10 个热门城市的完整旅游数据。
+-- 2. 每个城市包含：景点、酒店、美食、机场、火车站五类地图点位。
+-- 3. 基于地图点位自动生成：景点表（scenic_spot）、酒店表（hotel）、
+--    房型表（hotel_room）、门票表（ticket）、路线表（travel_route）、
+--    路线点位关联表（route_spot）。
+-- 4. 采用"不存在则插入"策略（NOT EXISTS），支持重复执行而不会产生重复数据。
+--
+-- 影响的城市：南京、苏州、青岛、长沙、武汉、昆明、大理、丽江、哈尔滨、深圳
+-- 执行前请确认：数据库 tourism_system 已创建，且相关表结构已初始化。
+-- ============================================================
+
+-- 切换到目标数据库
 use tourism_system;
+-- 设置字符集为 utf8mb4，确保中文和特殊符号正确存储
 set names utf8mb4;
 
 -- 2026-06-17 演示数据扩展：补充 10 个热门城市。
 -- 每个城市包含景点、酒店、美食、机场、火车站，并同步生成门票、房型和路线。
 
+-- ============================================================
+-- 第一步：插入地图点位（map_point）
+--
+-- 说明：
+-- - 将 10 个城市 × 10 个点位（每个城市 4 景点 + 2 酒店 + 2 美食 + 1 机场 + 1 火车站）
+--   共 100 条数据批量插入 map_point 表。
+-- - 使用 SELECT ... UNION ALL 构造虚拟表，再通过 WHERE NOT EXISTS 避免重复插入。
+-- - 字段覆盖：名称、类型、城市、地址、描述、价格、评分、标签、经纬度、排序号、状态。
+-- - 价格为 0 的表示免费景点或交通枢纽（机场/火车站）。
+-- ============================================================
 insert into map_point (point_name, point_type, city, address, description, price, score, tags, longitude, latitude, sort_no, status)
 select v.point_name, v.point_type, v.city, v.address, v.description, v.price, v.score, v.tags, v.longitude, v.latitude, v.sort_no, v.status
 from (
@@ -108,11 +135,22 @@ from (
     union all select '深圳宝安国际机场', '机场', '深圳', '深圳市宝安区机场南路', '深圳航空枢纽。', 0.00, 4.4, '机场,交通,华南', 113.810830, 22.639450, 398, 1
     union all select '深圳北站', '火车站', '深圳', '深圳市龙华区民治街道', '深圳高铁枢纽，适合广深港线路。', 0.00, 4.5, '高铁,火车站,交通', 114.029560, 22.609820, 399, 1
 ) v
+-- 防重复插入：只有当相同名称、城市、类型的点位不存在时才插入
 where not exists (
     select 1 from map_point mp
     where mp.point_name = v.point_name and mp.city = v.city and mp.point_type = v.point_type
 );
 
+-- ============================================================
+-- 第二步：从地图点位生成景点数据（scenic_spot）
+--
+-- 说明：
+-- - 仅选取 point_type = '景点' 的点位，且城市在 10 个目标城市内。
+-- - 根据标签自动分类：含"博物馆/历史/文化"→人文古迹，含"海滨/湖景/自然/雪山"→自然风光，
+--   含"夜游/街区/地标"→城市地标，含"亲子/主题"→主题乐园，其他→城市休闲。
+-- - 热度（popularity）统一设为 90，便于后续排序推荐。
+-- - NOT EXISTS 确保不会重复插入同名同城的景点。
+-- ============================================================
 insert into scenic_spot (scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude)
 select mp.point_name, mp.city,
        case
@@ -128,6 +166,14 @@ where mp.point_type = '景点'
   and mp.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳')
   and not exists (select 1 from scenic_spot s where s.scenic_name = mp.point_name and s.city = mp.city);
 
+-- ============================================================
+-- 第三步：从地图点位生成酒店数据（hotel）
+--
+-- 说明：
+-- - 仅选取 point_type = '酒店' 的点位，且城市在目标城市内。
+-- - 根据标签自动判定等级：含"度假/海景/湖景"→五星级，含"民宿/客栈"→精品民宿，其他→四星级。
+-- - status 统一设为 1（启用）。
+-- ============================================================
 insert into hotel (hotel_name, city, address, level, description, status)
 select mp.point_name, mp.city, mp.address,
        case
@@ -141,6 +187,15 @@ where mp.point_type = '酒店'
   and mp.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳')
   and not exists (select 1 from hotel h where h.hotel_name = mp.point_name and h.city = mp.city);
 
+-- ============================================================
+-- 第四步：为每家酒店生成房型（hotel_room）— 舒适大床房
+--
+-- 说明：
+-- - 通过 hotel 表 join map_point 表匹配酒店名称和城市。
+-- - 价格取 map_point 的价格与 268 元的较大值，保证最低价格不低于 268 元。
+-- - 库存统一设为 12 间，状态为 AVAILABLE。
+-- - 若该酒店已存在"舒适大床房"则跳过（NOT EXISTS）。
+-- ============================================================
 insert into hotel_room (hotel_id, room_type, price, stock, room_status)
 select h.id, '舒适大床房', greatest(268.00, coalesce(mp.price, 398.00)), 12, 'AVAILABLE'
 from hotel h
@@ -148,6 +203,13 @@ join map_point mp on mp.point_name = h.hotel_name and mp.city = h.city and mp.po
 where mp.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳')
   and not exists (select 1 from hotel_room r where r.hotel_id = h.id and r.room_type = '舒适大床房');
 
+-- ============================================================
+-- 第五步：为每家酒店生成房型（hotel_room）— 景观双床房
+--
+-- 说明：
+-- - 与第四步类似，但房型为"景观双床房"，价格为基础价格 + 160 元，最低 328 元。
+-- - 库存统一设为 7 间，状态为 AVAILABLE。
+-- ============================================================
 insert into hotel_room (hotel_id, room_type, price, stock, room_status)
 select h.id, '景观双床房', greatest(328.00, coalesce(mp.price, 398.00) + 160.00), 7, 'AVAILABLE'
 from hotel h
@@ -155,18 +217,42 @@ join map_point mp on mp.point_name = h.hotel_name and mp.city = h.city and mp.po
 where mp.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳')
   and not exists (select 1 from hotel_room r where r.hotel_id = h.id and r.room_type = '景观双床房');
 
+-- ============================================================
+-- 第六步：为每个景点生成门票（ticket）— 成人票
+--
+-- 说明：
+-- - 遍历目标城市的所有景点，生成"景点名+成人票"。
+-- - 价格取景点价格与 0 的较大值（免费景点则价格为 0）。
+-- - 库存统一 150 张，可用日期统一为 2026-06-20。
+-- - 若该景点已存在同名成人票则跳过。
+-- ============================================================
 insert into ticket (scenic_id, ticket_name, price, stock, available_date)
 select s.id, concat(s.scenic_name, '成人票'), greatest(0.00, coalesce(s.price, 0.00)), 150, '2026-06-20'
 from scenic_spot s
 where s.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳')
   and not exists (select 1 from ticket t where t.scenic_id = s.id and t.ticket_name = concat(s.scenic_name, '成人票'));
 
+-- ============================================================
+-- 第七步：为每个景点生成门票（ticket）— 学生票
+--
+-- 说明：
+-- - 与第六步类似，但票种为"学生票"，价格为成人票的 75%（四舍五入到 2 位小数）。
+-- - 库存统一 80 张，可用日期同样为 2026-06-20。
+-- ============================================================
 insert into ticket (scenic_id, ticket_name, price, stock, available_date)
 select s.id, concat(s.scenic_name, '学生票'), round(greatest(0.00, coalesce(s.price, 0.00)) * 0.75, 2), 80, '2026-06-20'
 from scenic_spot s
 where s.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳')
   and not exists (select 1 from ticket t where t.scenic_id = s.id and t.ticket_name = concat(s.scenic_name, '学生票'));
 
+-- ============================================================
+-- 第八步：生成旅游路线（travel_route）— 三日精选游
+--
+-- 说明：
+-- - 为每个城市生成一条"三日精选游"路线，天数 3 天，主题"城市精选"。
+-- - 预算从子查询中按城市读取（rich_budget），范围 1288~1688 元。
+-- - 描述为固定模板，串联城市核心景点、酒店、美食和交通节点。
+-- ============================================================
 insert into travel_route (route_name, city, days, budget, theme, route_desc)
 select concat(c.city, '三日精选游'), c.city, 3, c.rich_budget, '城市精选', concat('串联', c.city, '核心景点、精选酒店、特色美食和交通节点，适合课堂完整演示。')
 from (
@@ -174,6 +260,14 @@ from (
 ) c
 where not exists (select 1 from travel_route r where r.route_name = concat(c.city, '三日精选游'));
 
+-- ============================================================
+-- 第九步：生成旅游路线（travel_route）— 轻预算周末游
+--
+-- 说明：
+-- - 为每个城市生成一条"轻预算周末游"路线，天数 2 天，主题"经济实惠"。
+-- - 预算从子查询中读取（light_budget），范围 688~1088 元，面向预算敏感用户。
+-- - 描述强调优先选择免费景点、小吃街区和交通便利酒店。
+-- ============================================================
 insert into travel_route (route_name, city, days, budget, theme, route_desc)
 select concat(c.city, '轻预算周末游'), c.city, 2, c.light_budget, '经济实惠', concat('面向轻预算用户，优先选择', c.city, '免费景点、小吃街区和交通便利酒店。')
 from (
@@ -181,10 +275,28 @@ from (
 ) c
 where not exists (select 1 from travel_route r where r.route_name = concat(c.city, '轻预算周末游'));
 
+-- ============================================================
+-- 第十步：清理旧路线点位（route_spot）
+--
+-- 说明：
+-- - 在重新生成路线点位前，先删除目标城市已有的路线点位关联。
+-- - 避免路线点位重复叠加，确保每次扩展脚本执行后数据一致。
+-- ============================================================
 delete rs from route_spot rs
 join travel_route tr on tr.id = rs.route_id
 where tr.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳');
 
+-- ============================================================
+-- 第十一步：生成路线点位关联（route_spot）
+--
+-- 说明：
+-- - 为每个城市的路线按景点热度（popularity）和评分（score）排序，选取前 N 个景点：
+--   2 天路线取前 4 个，3 天路线取前 5 个。
+-- - 使用 ROW_NUMBER() 窗口函数为每个城市的景点分配序号（rn）。
+-- - 通过 CASE 表达式将 rn 映射到 day_no（第几天）和 sort_no（第几站）：
+--   rn 1~2 → 第1天，rn 3~4 → 第2天，rn 5 → 第3天；
+--   奇数 rn → 第1站，偶数 rn → 第2站。
+-- ============================================================
 insert into route_spot (route_id, scenic_id, day_no, sort_no)
 select tr.id, ranked.id,
        case when ranked.rn <= 2 then 1 when ranked.rn <= 4 then 2 else 3 end,
@@ -198,6 +310,9 @@ join (
 ) ranked on ranked.city = tr.city and ranked.rn <= case when tr.days = 2 then 4 else 5 end
 where tr.city in ('南京','苏州','青岛','长沙','武汉','昆明','大理','丽江','哈尔滨','深圳');
 
+-- ============================================================
+-- 数据校验查询：统计各表总记录数
+-- ============================================================
 select 'scenic_spot' table_name, count(*) total from scenic_spot
 union all select 'hotel', count(*) from hotel
 union all select 'hotel_room', count(*) from hotel_room
@@ -206,5 +321,12 @@ union all select 'travel_route', count(*) from travel_route
 union all select 'route_spot', count(*) from route_spot
 union all select 'map_point', count(*) from map_point;
 
+-- ============================================================
+-- 数据校验查询：按城市统计景点数量
+-- ============================================================
 select city, count(*) scenic_count from scenic_spot group by city order by city;
+
+-- ============================================================
+-- 数据校验查询：按类型统计地图点位数量
+-- ============================================================
 select point_type, count(*) total from map_point group by point_type order by point_type;

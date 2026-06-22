@@ -2,8 +2,19 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    ScenicSpotMapper.xml - 景点信息 SQL 映射文件
+    namespace: com.tourism.mapper.ScenicSpotMapper
+    作用：提供景点信息的完整 CRUD SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.ScenicSpotMapper">
 
+    <!--
+        resultMap: ScenicSpotResultMap
+        类型：com.tourism.entity.ScenicSpot
+        设计说明：下划线列名（scenic_name, longitude, latitude）映射到驼峰属性。
+        <id> 标识主键 id。
+    -->
     <resultMap id="ScenicSpotResultMap" type="com.tourism.entity.ScenicSpot">
         <id column="id" property="id"/>
         <result column="scenic_name" property="scenicName"/>
@@ -18,22 +29,50 @@
         <result column="latitude" property="latitude"/>
     </resultMap>
 
+    <!--
+        查询所有景点信息
+        表：scenic_spot
+        查询列：id, scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude
+    -->
     <select id="selectAll" resultMap="ScenicSpotResultMap">
         select id, scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude
         from scenic_spot
     </select>
 
+    <!--
+        根据景点 ID 查询单个景点详情
+        表：scenic_spot
+        查询列：同上
+        WHERE 条件：id = #{id}，预编译绑定防止 SQL 注入。
+        parameterType：long
+    -->
     <select id="selectById" parameterType="long" resultMap="ScenicSpotResultMap">
         select id, scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude
         from scenic_spot
         where id = #{id}
     </select>
 
+    <!--
+        插入一条新的景点记录
+        表：scenic_spot
+        插入列：scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude
+        useGeneratedKeys="true"：启用数据库自增主键回填。
+        keyProperty="id"：将生成的主键赋值给传入对象的 id 属性。
+        parameterType：com.tourism.entity.ScenicSpot
+    -->
     <insert id="insert" parameterType="com.tourism.entity.ScenicSpot" useGeneratedKeys="true" keyProperty="id">
         insert into scenic_spot (scenic_name, city, category, description, price, score, popularity, tags, longitude, latitude)
         values (#{scenicName}, #{city}, #{category}, #{description}, #{price}, #{score}, #{popularity}, #{tags}, #{longitude}, #{latitude})
     </insert>
 
+    <!--
+        根据景点 ID 更新景点信息
+        表：scenic_spot
+        SET 子句：全字段更新
+        WHERE 条件：id = #{id}
+        parameterType：com.tourism.entity.ScenicSpot
+        注意：全量更新，传入 null 会导致数据库列被更新为 null。
+    -->
     <update id="updateById" parameterType="com.tourism.entity.ScenicSpot">
         update scenic_spot
         set scenic_name = #{scenicName},
@@ -49,6 +88,12 @@
         where id = #{id}
     </update>
 
+    <!--
+        根据景点 ID 删除景点记录
+        表：scenic_spot
+        WHERE 条件：id = #{id}
+        parameterType：long
+    -->
     <delete id="deleteById" parameterType="long">
         delete from scenic_spot where id = #{id}
     </delete>

@@ -2,8 +2,21 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    HotelRoomMapper.xml - 酒店房间 SQL 映射文件
+    namespace: com.tourism.mapper.HotelRoomMapper
+    作用：提供酒店房间的查询、库存扣减与恢复的 SQL 映射。
+-->
 <mapper namespace="com.tourism.mapper.HotelRoomMapper">
 
+    <!--
+        resultMap: HotelRoomResultMap
+        类型：com.tourism.entity.HotelRoom
+        设计说明：数据库字段为下划线命名（如 hotel_id, room_type, room_status），
+        Java 实体为驼峰命名（hotelId, roomType, roomStatus）。
+        通过显式 <result> 映射确保正确封装。
+        <id> 标识主键 id。
+    -->
     <resultMap id="HotelRoomResultMap" type="com.tourism.entity.HotelRoom">
         <id column="id" property="id"/>
         <result column="hotel_id" property="hotelId"/>
@@ -13,6 +26,15 @@
         <result column="room_status" property="roomStatus"/>
     </resultMap>
 
+    <!--
+        根据酒店 ID 查询该酒店下的所有房间列表
+        表：hotel_room
+        查询列：id, hotel_id, room_type, price, stock, room_status
+        WHERE 条件：hotel_id = #{hotelId}
+        ORDER BY：price asc，按价格升序，方便用户从低价到高价浏览。
+        parameterType：long
+        #{hotelId}：预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectByHotelId" parameterType="long" resultMap="HotelRoomResultMap">
         select id, hotel_id, room_type, price, stock, room_status
         from hotel_room
@@ -20,12 +42,30 @@
         order by price asc
     </select>
 
+    <!--
+        根据房间 ID 查询单个房间详情
+        表：hotel_room
+        查询列：id, hotel_id, room_type, price, stock, room_status
+        WHERE 条件：id = #{id}
+        parameterType：long
+        #{id}：预编译参数绑定，防止 SQL 注入。
+    -->
     <select id="selectById" parameterType="long" resultMap="HotelRoomResultMap">
         select id, hotel_id, room_type, price, stock, room_status
         from hotel_room
         where id = #{id}
     </select>
 
+    <!--
+        扣减房间库存（预订时调用）
+        表：hotel_room
+        SET 子句：stock = stock - 1，原子性递减库存
+        WHERE 条件：
+            1. id = #{id}
+            2. stock > 0：乐观锁条件，确保库存大于 0 才扣减，防止超卖
+        #{id}：预编译参数绑定，防止 SQL 注入。
+        返回：受影响的行数，1 表示成功，0 表示库存不足。
+    -->
     <update id="deductStock">
         update hotel_room
         set stock = stock - 1
@@ -33,6 +73,14 @@
           and stock > 0
     </update>
 
+    <!--
+        恢复房间库存（取消订单时调用）
+        表：hotel_room
+        SET 子句：stock = stock + 1，原子性递增库存
+        WHERE 条件：id = #{id}
+        #{id}：预编译参数绑定，防止 SQL 注入。
+        返回：受影响的行数。
+    -->
     <update id="restoreStock">
         update hotel_room
         set stock = stock + 1

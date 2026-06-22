@@ -2,8 +2,21 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    OrderQueryMapper.xml - 用户订单查询 SQL 映射文件
+    namespace: com.tourism.mapper.OrderQueryMapper
+    作用：将酒店订单和门票订单合并为统一的 UserOrderVO，供用户中心查看个人订单。
+-->
 <mapper namespace="com.tourism.mapper.OrderQueryMapper">
 
+    <!--
+        resultMap: UserOrderVOResultMap
+        类型：com.tourism.vo.UserOrderVO
+        设计说明：统一管理酒店订单和门票订单的字段映射。
+        下划线列名映射到驼峰属性名，如 order_type -> orderType, total_amount -> totalAmount。
+        特殊字段：use_date 为通用使用日期，check_in_date/check_out_date 为酒店特有，visit_date/quantity 为门票特有。
+        <id> 标识主键 id。
+    -->
     <resultMap id="UserOrderVOResultMap" type="com.tourism.vo.UserOrderVO">
         <id column="id" property="id"/>
         <result column="order_type" property="orderType"/>
@@ -18,6 +31,22 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <!--
+        根据用户 ID 查询酒店订单列表
+        表：hotel_order（别名 ho）、hotel（别名 h）
+        JOIN 逻辑：LEFT JOIN hotel h on ho.hotel_id = h.id，获取酒店名称作为 item_name
+        字段说明：
+            - ho.id 为订单主键
+            - 'HOTEL' as order_type 固定标识订单类型
+            - h.hotel_name as item_name 酒店名称
+            - ho.total_amount, ho.order_status 来自订单表
+            - ho.check_in_date as use_date 入住日期映射为通用使用日期
+            - ho.check_in_date, ho.check_out_date 酒店特有日期
+            - null as visit_date, null as quantity 门票字段置空
+            - ho.create_time 创建时间
+        WHERE 条件：ho.user_id = #{userId}，限定当前用户，预编译绑定防止 SQL 注入。
+        ORDER BY：ho.create_time desc，最新订单在前。
+    -->
     <select id="selectHotelOrdersByUserId" parameterType="long" resultMap="UserOrderVOResultMap">
         select
             ho.id,
@@ -37,6 +66,24 @@
         order by ho.create_time desc
     </select>
 
+    <!--
+        根据用户 ID 查询门票订单列表
+        表：ticket_order（别名 to1）、ticket（别名 t）
+        JOIN 逻辑：LEFT JOIN ticket t on to1.ticket_id = t.id，获取门票名称作为 item_name
+        字段说明：
+            - to1.id 为订单主键
+            - 'TICKET' as order_type 固定标识订单类型
+            - t.ticket_name as item_name 门票名称
+            - to1.total_amount, to1.order_status 来自订单表
+            - to1.visit_date as use_date 游玩日期映射为通用使用日期
+            - null as check_in_date, null as check_out_date 酒店字段置空
+            - to1.visit_date 游玩日期
+            - to1.quantity 购买数量
+            - to1.create_time 创建时间
+        WHERE 条件：to1.user_id = #{userId}，限定当前用户，预编译绑定防止 SQL 注入。
+        ORDER BY：to1.create_time desc，最新订单在前。
+        注意：to1 为别名，避免 "to" 作为 SQL 保留关键字导致语法错误。
+    -->
     <select id="selectTicketOrdersByUserId" parameterType="long" resultMap="UserOrderVOResultMap">
         select
             to1.id,
